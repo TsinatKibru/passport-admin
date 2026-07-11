@@ -47,6 +47,44 @@
   --radius-xl: 16px;
 }
 
+/* Dark Mode */
+[data-theme='dark'] {
+  /* Background layers */
+  --bg-page: #0F172A;
+  --bg-surface: #1E293B;
+  --bg-subtle: #334155;
+
+  /* Borders */
+  --border: #334155;
+  --border-strong: #475569;
+
+  /* Typography */
+  --text-primary: #F1F5F9;
+  --text-secondary: #CBD5E1;
+  --text-muted: #64748B;
+  --text-inverse: #0F172A;
+
+  /* Brand */
+  --brand: #3B82F6;
+  --brand-light: #1E3A8A;
+  --brand-hover: #2563EB;
+
+  /* Semantic */
+  --success: #22C55E;
+  --success-bg: #14532D;
+  --warning: #F59E0B;
+  --warning-bg: #451A03;
+  --danger: #EF4444;
+  --danger-bg: #450A0A;
+  --info: #06B6D4;
+  --info-bg: #164E63;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -58,4 +96,20 @@ body {
   font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 200ms ease-in-out, color 200ms ease-in-out;
+}
+
+/* Responsive utilities */
+.p-4 {
+  padding: 16px;
+}
+
+.md\:p-6 {
+  padding: 16px;
+}
+
+@media (min-width: 769px) {
+  .md\:p-6 {
+    padding: 24px;
+  }
 }

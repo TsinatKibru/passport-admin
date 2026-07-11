@@ -1,15 +1,33 @@
 'use client';
 
-import { Search, Bell } from 'lucide-react';
-import { useState } from 'react';
+import { Search, Bell, Moon, Sun, Menu } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 interface HeaderProps {
   title: string;
   subtitle?: string;
+  onMenuToggle?: () => void;
 }
 
-export default function Header({ title, subtitle }: HeaderProps) {
+export default function Header({ title, subtitle, onMenuToggle }: HeaderProps) {
   const [hasNotification] = useState(true);
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const shouldBeDark = saved === 'dark' || (!saved && prefersDark);
+    
+    setIsDark(shouldBeDark);
+    document.documentElement.setAttribute('data-theme', shouldBeDark ? 'dark' : 'light');
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = isDark ? 'light' : 'dark';
+    setIsDark(!isDark);
+    localStorage.setItem('theme', newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+  };
 
   return (
     <header
@@ -17,28 +35,92 @@ export default function Header({ title, subtitle }: HeaderProps) {
         height: '60px',
         background: 'var(--bg-surface)',
         borderBottom: '1px solid var(--border)',
-        padding: '0 24px',
+        padding: '0 16px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
+        gap: '12px',
       }}
     >
-      {/* Left: Title */}
-      <div>
-        <h1 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
-          {title}
-        </h1>
-        {subtitle && (
-          <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px' }}>
-            {subtitle}
-          </div>
-        )}
+      {/* Left: Mobile Menu + Title */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
+        {/* Mobile Menu Button - ONLY on mobile */}
+        <style>{`
+          .mobile-menu-btn {
+            display: flex;
+          }
+          @media (min-width: 769px) {
+            .mobile-menu-btn {
+              display: none !important;
+            }
+          }
+        `}</style>
+        <button
+          onClick={onMenuToggle}
+          className="mobile-menu-btn"
+          style={{
+            width: '36px',
+            height: '36px',
+            border: 'none',
+            background: 'transparent',
+            borderRadius: 'var(--radius-lg)',
+            cursor: 'pointer',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'background 150ms',
+            flexShrink: 0,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'var(--bg-subtle)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent';
+          }}
+        >
+          <Menu size={20} color="var(--text-secondary)" />
+        </button>
+
+        <div style={{ minWidth: 0, overflow: 'hidden' }}>
+          <h1 style={{ 
+            fontSize: '16px', 
+            fontWeight: 600, 
+            color: 'var(--text-primary)', 
+            margin: 0,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}>
+            {title}
+          </h1>
+          {subtitle && (
+            <div style={{ 
+              fontSize: '13px', 
+              color: 'var(--text-muted)', 
+              marginTop: '2px',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}>
+              {subtitle}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Right: Search + Bell + Avatar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        {/* Search Input */}
-        <div style={{ position: 'relative' }}>
+      {/* Right: Search + Theme + Bell + Avatar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+        {/* Search - Hidden on small screens */}
+        <style>{`
+          .search-input {
+            display: block;
+          }
+          @media (max-width: 640px) {
+            .search-input {
+              display: none !important;
+            }
+          }
+        `}</style>
+        <div style={{ position: 'relative' }} className="search-input">
           <Search
             size={14}
             color="var(--text-muted)"
@@ -54,7 +136,7 @@ export default function Header({ title, subtitle }: HeaderProps) {
             type="text"
             placeholder="Search..."
             style={{
-              width: '220px',
+              width: '180px',
               height: '34px',
               paddingLeft: '32px',
               paddingRight: '12px',
@@ -77,8 +159,9 @@ export default function Header({ title, subtitle }: HeaderProps) {
           />
         </div>
 
-        {/* Notification Bell */}
+        {/* Theme Toggle */}
         <button
+          onClick={toggleTheme}
           style={{
             width: '34px',
             height: '34px',
@@ -89,8 +172,45 @@ export default function Header({ title, subtitle }: HeaderProps) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            transition: 'background 150ms',
+            flexShrink: 0,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'var(--bg-subtle)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent';
+          }}
+          title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {isDark ? <Sun size={16} color="var(--text-secondary)" /> : <Moon size={16} color="var(--text-secondary)" />}
+        </button>
+
+        {/* Bell - Hidden on very small screens */}
+        <style>{`
+          .bell-btn {
+            display: flex;
+          }
+          @media (max-width: 480px) {
+            .bell-btn {
+              display: none !important;
+            }
+          }
+        `}</style>
+        <button
+          className="bell-btn"
+          style={{
+            width: '34px',
+            height: '34px',
+            border: 'none',
+            background: 'transparent',
+            borderRadius: 'var(--radius-lg)',
+            cursor: 'pointer',
+            alignItems: 'center',
+            justifyContent: 'center',
             position: 'relative',
             transition: 'background 150ms',
+            flexShrink: 0,
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = 'var(--bg-subtle)';
@@ -130,6 +250,7 @@ export default function Header({ title, subtitle }: HeaderProps) {
             fontSize: '12px',
             fontWeight: 600,
             cursor: 'pointer',
+            flexShrink: 0,
           }}
         >
           AD
