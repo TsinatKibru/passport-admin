@@ -1,36 +1,127 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Passport Track Admin Dashboard
 
-## Getting Started
+Modern administrative dashboard for the ICS Passport & Movable Box Tracking System.
 
-First, run the development server:
+## 🎯 Features
+
+- **Real-time Dashboard** - Live KPI metrics with 5-second polling
+- **Physical Structure Management** - Hierarchical view of Rooms → Shelves → Rows → Slots
+- **Movable Box Tracking** - Complete box inventory with occupancy metrics
+- **Passport Management** - Track passport status and assignments
+- **Audit Trail** - Live log feed of all system activities
+- **ICS Design System** - Government-grade interface with Ethiopian flag colors
+
+## 🛠️ Tech Stack
+
+- **Next.js 16** (App Router)
+- **TypeScript**
+- **Tailwind CSS v4**
+- **TanStack Query** (5-second polling)
+- **Lucide React** (icons)
+- **Axios** (HTTP client with JWT interceptor)
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 18+ 
+- Backend API running on `http://localhost:3000/api`
+
+### Installation
+
+```bash
+npm install
+```
+
+### Development
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit `http://localhost:3001`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Build for Production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+## 🔐 Authentication
 
-To learn more about Next.js, take a look at the following resources:
+**Test Credentials:**
+- Email: `admin@passport-track.com`
+- Password: `adminpass`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+JWT token stored in `localStorage` as `accessToken`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📁 Project Structure
 
-## Deploy on Vercel
+```
+src/
+├── app/
+│   ├── login/
+│   │   └── page.tsx          # Login page
+│   ├── page.tsx               # Main dashboard (redesigned)
+│   ├── layout.tsx             # Root layout with Providers
+│   ├── providers.tsx          # TanStack Query setup
+│   └── globals.css            # CSS tokens & Tailwind imports
+└── lib/
+    └── api/
+        └── client.ts          # Axios singleton with JWT interceptor
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🎨 Design System
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Colors
+
+- **Primary**: `#003ec7` (ICS Blue)
+- **Success**: `hsl(156, 100%, 31%)` (Ethiopian Green)
+- **Warning**: `hsl(42, 90%, 46%)` (Ethiopian Yellow)  
+- **Danger**: `hsl(359, 86%, 52%)` (Ethiopian Red)
+- **Background**: `#FAFAFA`
+
+### Dashboard Views
+
+1. **Dashboard** - KPI overview + box table
+2. **Physical Structure** - Hierarchical tree view
+3. **Movable Boxes** - Grid of all boxes
+4. **Passports** - Table of all passports
+5. **Audit Logs** - Timeline feed
+
+## 🔌 API Integration
+
+All endpoints accessed through `apiClient` from `@/lib/api/client`:
+
+- `GET /boxes` - List all boxes
+- `GET /passports` - List all passports
+- `GET /location/rooms` - List rooms
+- `GET /location/shelves` - List shelves
+- `GET /location/rows` - List rows
+- `GET /location/slots` - List slots (with nested box data)
+- `GET /location/logs` - Paginated audit logs
+- `POST /auth/login` - Authentication
+
+## ⚙️ Configuration
+
+**Environment Variables:**
+
+Create a `.env.local` file:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3000/api
+```
+
+Defaults to `http://localhost:3000/api` if not set.
+
+## 📝 Notes
+
+- Design based on Figma exports from `stitch_passport_custody_tracking_system`
+- ICS (Immigration and Citizenship Service) branding applied
+- 5-second polling for real-time updates (can be upgraded to WebSockets)
+- Auth guard protects all routes except `/login`
+
+## 📄 License
+
+Private - ICS Internal Use Only

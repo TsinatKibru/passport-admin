@@ -1,65 +1,61 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
-/* -------------------------------------------------------------------------
-   CSS variable token definitions — CONVENTIONS.md §2
-   All semantic color tokens resolve here. Change brand color in one place.
-   shadcn/ui also reads these variables via its own mechanism.
-   ------------------------------------------------------------------------- */
 :root {
-  --radius: 0.625rem;
+  /* Layout */
+  --sidebar-width: 240px;
 
-  /* Primary — brand cobalt blue */
-  --color-primary: 215 72% 36%;
-  --color-primary-foreground: 0 0% 100%;
+  /* Background layers */
+  --bg-page: #F8FAFC;
+  --bg-surface: #FFFFFF;
+  --bg-subtle: #F1F5F9;
 
-  /* Surface — near-white background for cards/panels */
-  --color-surface: 210 20% 98%;
-  --color-surface-foreground: 215 25% 15%;
-  --color-surface-muted: 214 16% 93%;
+  /* Borders */
+  --border: #E2E8F0;
+  --border-strong: #CBD5E1;
 
-  /* Border */
-  --color-border: 214 20% 88%;
+  /* Typography */
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #94A3B8;
+  --text-inverse: #FFFFFF;
 
-  /* Semantic states */
-  --color-success: 156 100% 31%;
-  --color-success-foreground: 0 0% 100%;
+  /* Brand */
+  --brand: #2563EB;
+  --brand-light: #EFF6FF;
+  --brand-hover: #1D4ED8;
 
-  --color-warning: 42 90% 46%;
-  --color-warning-foreground: 0 0% 100%;
+  /* Semantic */
+  --success: #16A34A;
+  --success-bg: #F0FDF4;
+  --warning: #D97706;
+  --warning-bg: #FFFBEB;
+  --danger: #DC2626;
+  --danger-bg: #FEF2F2;
+  --info: #0891B2;
+  --info-bg: #ECFEFF;
 
-  --color-danger: 359 86% 52%;
-  --color-danger-foreground: 0 0% 100%;
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 
-  --color-muted: 214 16% 93%;
-  --color-muted-foreground: 215 16% 47%;
+  /* Radius */
+  --radius-sm: 6px;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
 }
 
-/* Dark mode */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-primary: 215 80% 48%;
-    --color-primary-foreground: 0 0% 100%;
-
-    --color-surface: 215 28% 10%;
-    --color-surface-foreground: 210 20% 92%;
-    --color-surface-muted: 215 22% 15%;
-
-    --color-border: 215 20% 22%;
-
-    --color-success: 156 80% 38%;
-    --color-warning: 42 85% 50%;
-    --color-danger: 359 75% 54%;
-
-    --color-muted: 215 22% 18%;
-    --color-muted-foreground: 215 16% 60%;
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
-  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
-  background-color: hsl(var(--color-surface));
-  color: hsl(var(--color-surface-foreground));
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
-
