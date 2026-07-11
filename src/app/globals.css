@@ -1,0 +1,65 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+/* -------------------------------------------------------------------------
+   CSS variable token definitions — CONVENTIONS.md §2
+   All semantic color tokens resolve here. Change brand color in one place.
+   shadcn/ui also reads these variables via its own mechanism.
+   ------------------------------------------------------------------------- */
+:root {
+  --radius: 0.625rem;
+
+  /* Primary — brand cobalt blue */
+  --color-primary: 215 72% 36%;
+  --color-primary-foreground: 0 0% 100%;
+
+  /* Surface — near-white background for cards/panels */
+  --color-surface: 210 20% 98%;
+  --color-surface-foreground: 215 25% 15%;
+  --color-surface-muted: 214 16% 93%;
+
+  /* Border */
+  --color-border: 214 20% 88%;
+
+  /* Semantic states */
+  --color-success: 156 100% 31%;
+  --color-success-foreground: 0 0% 100%;
+
+  --color-warning: 42 90% 46%;
+  --color-warning-foreground: 0 0% 100%;
+
+  --color-danger: 359 86% 52%;
+  --color-danger-foreground: 0 0% 100%;
+
+  --color-muted: 214 16% 93%;
+  --color-muted-foreground: 215 16% 47%;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-primary: 215 80% 48%;
+    --color-primary-foreground: 0 0% 100%;
+
+    --color-surface: 215 28% 10%;
+    --color-surface-foreground: 210 20% 92%;
+    --color-surface-muted: 215 22% 15%;
+
+    --color-border: 215 20% 22%;
+
+    --color-success: 156 80% 38%;
+    --color-warning: 42 85% 50%;
+    --color-danger: 359 75% 54%;
+
+    --color-muted: 215 22% 18%;
+    --color-muted-foreground: 215 16% 60%;
+  }
+}
+
+body {
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+  background-color: hsl(var(--color-surface));
+  color: hsl(var(--color-surface-foreground));
+  -webkit-font-smoothing: antialiased;
+}
+
