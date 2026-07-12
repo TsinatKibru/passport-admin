@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import { apiClient } from '@/lib/api/client';
 import { useRole } from '@/lib/auth/RoleContext';
 import { Shell } from '@/components/layout/Shell';
@@ -72,7 +73,7 @@ interface MovableBox {
   status: string;
 }
 
-type ModalType = 'room' | 'shelf' | 'row' | 'slot' | 'assign-box' | null;
+type ModalType = 'room' | 'shelf' | 'row' | 'slot' | 'assign-box' | 'bulk-create-slots' | 'bulk-create-rows' | null;
 
 export default function StructurePage() {
   const { canCreate, canDelete } = useRole();
@@ -90,6 +91,21 @@ export default function StructurePage() {
   const [modalType, setModalType] = useState<ModalType>(null);
   const [parentId, setParentId] = useState<string>('');
   const [formData, setFormData] = useState({ name: '', qrCode: '', position: 1 });
+  
+  // Bulk create state
+  const [bulkSlotForm, setBulkSlotForm] = useState({
+    namePattern: 'Slot {n}',
+    qrPattern: 'SLOT-{n}',
+    startNumber: 1,
+    endNumber: 10,
+    positionStart: 1,
+  });
+  
+  const [bulkRowForm, setBulkRowForm] = useState({
+    namePattern: 'Row {letter}',
+    qrPattern: 'ROW-{letter}',
+    sequence: 'A-J', // A through J
+  });
 
   // Fetch rooms
   const { data: rooms = [] } = useQuery<Room[]>({
@@ -182,6 +198,122 @@ export default function StructurePage() {
       queryClient.invalidateQueries({ queryKey: [variables.type + 's'] });
       setModalType(null);
       setFormData({ name: '', qrCode: '', position: 1 });
+      toast.success(`${variables.type.charAt(0).toUpperCase() + variables.type.slice(1)} created successfully`);
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to create item. Please try again.';
+      toast.error(message);
+    },
+  });
+  
+  // Bulk create slots mutation
+  const bulkCreateSlotsMutation = useMutation({
+    mutationFn: async ({ rowId, pattern }: { rowId: string; pattern: typeof bulkSlotForm }) => {
+      const slots = [];
+      for (let i = pattern.startNumber; i <= pattern.endNumber; i++) {
+        const name = pattern.namePattern.replace('{n}', String(i));
+        const qrCode = pattern.qrPattern.replace('{n}', String(i));
+        const position = pattern.positionStart + (i - pattern.startNumber);
+        slots.push({ name, qrCode, position, rowId });
+      }
+      
+      // Create all slots sequentially (better error handling than parallel)
+      const results = [];
+      for (const slot of slots) {
+        try {
+          const res = await apiClient.post('/location/slots', slot);
+          results.push({ success: true, data: res.data });
+        } catch (error: any) {
+          results.push({ 
+            success: false, 
+            error: error.response?.data?.message || 'Failed',
+            slot: slot.name 
+          });
+        }
+      }
+      return results;
+    },
+    onSuccess: (results) => {
+      queryClient.invalidateQueries({ queryKey: ['slots'] });
+      const successCount = results.filter(r => r.success).length;
+      const failCount = results.filter(r => !r.success).length;
+      
+      setModalType(null);
+      setBulkSlotForm({
+        namePattern: 'Slot {n}',
+        qrPattern: 'SLOT-{n}',
+        startNumber: 1,
+        endNumber: 10,
+        positionStart: 1,
+      });
+      
+      if (failCount === 0) {
+        toast.success(`${successCount} slots created successfully`);
+      } else {
+        toast.error(`Created ${successCount} slots, ${failCount} failed (likely duplicates)`);
+      }
+    },
+    onError: (error: any) => {
+      toast.error('Bulk create failed. Please try again.');
+    },
+  });
+  
+  // Bulk create rows mutation
+  const bulkCreateRowsMutation = useMutation({
+    mutationFn: async ({ shelfId, pattern }: { shelfId: string; pattern: typeof bulkRowForm }) => {
+      const [start, end] = pattern.sequence.split('-');
+      const rows = [];
+      
+      // Generate A-Z sequence
+      if (start.match(/[A-Z]/i) && end.match(/[A-Z]/i)) {
+        const startCode = start.toUpperCase().charCodeAt(0);
+        const endCode = end.toUpperCase().charCodeAt(0);
+        let position = 1;
+        
+        for (let code = startCode; code <= endCode; code++) {
+          const letter = String.fromCharCode(code);
+          const name = pattern.namePattern.replace('{letter}', letter);
+          const qrCode = pattern.qrPattern.replace('{letter}', letter);
+          rows.push({ name, qrCode, position: position++, shelfId });
+        }
+      }
+      
+      // Create all rows sequentially
+      const results = [];
+      for (const row of rows) {
+        try {
+          const res = await apiClient.post('/location/rows', row);
+          results.push({ success: true, data: res.data });
+        } catch (error: any) {
+          results.push({ 
+            success: false, 
+            error: error.response?.data?.message || 'Failed',
+            row: row.name 
+          });
+        }
+      }
+      return results;
+    },
+    onSuccess: (results) => {
+      queryClient.invalidateQueries({ queryKey: ['rows'] });
+      const successCount = results.filter(r => r.success).length;
+      const failCount = results.filter(r => !r.success).length;
+      
+      setModalType(null);
+      setBulkRowForm({
+        namePattern: 'Row {letter}',
+        qrPattern: 'ROW-{letter}',
+        sequence: 'A-J',
+      });
+      
+      if (failCount === 0) {
+        toast.success(`${successCount} rows created successfully`);
+      } else {
+        toast.error(`Created ${successCount} rows, ${failCount} failed (likely duplicates)`);
+      }
+    },
+    onError: (error: any) => {
+      toast.error('Bulk create failed. Please try again.');
     },
   });
 
@@ -192,6 +324,11 @@ export default function StructurePage() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [variables.type + 's'] });
+      toast.success(`${variables.type.charAt(0).toUpperCase() + variables.type.slice(1)} deleted successfully`);
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to delete item. It may still contain child items.';
+      toast.error(message);
     },
   });
 
@@ -204,6 +341,11 @@ export default function StructurePage() {
       queryClient.invalidateQueries({ queryKey: ['boxes'] });
       queryClient.invalidateQueries({ queryKey: ['slots'] });
       setModalType(null);
+      toast.success('Box assigned to slot successfully');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to assign box to slot';
+      toast.error(message);
     },
   });
 
@@ -251,6 +393,16 @@ export default function StructurePage() {
     if (modalType === 'slot') data.rowId = parentId;
     
     createMutation.mutate({ type: modalType as string, data });
+  };
+  
+  const handleBulkCreateSlots = () => {
+    if (!parentId) return;
+    bulkCreateSlotsMutation.mutate({ rowId: parentId, pattern: bulkSlotForm });
+  };
+  
+  const handleBulkCreateRows = () => {
+    if (!parentId) return;
+    bulkCreateRowsMutation.mutate({ shelfId: parentId, pattern: bulkRowForm });
   };
 
   const handleDelete = (type: string, id: string, name: string) => {
@@ -397,22 +549,49 @@ export default function StructurePage() {
                               {shelf.qrCode}
                             </span>
                             {canCreate && (
-                              <button
-                                onClick={(e) => { e.stopPropagation(); openCreateModal('row', shelf.id); }}
-                                style={{
-                                  padding: '3px 6px',
-                                  fontSize: '11px',
-                                  border: '1px solid var(--border)',
-                                  borderRadius: 'var(--radius)',
-                                  background: 'var(--bg-surface)',
-                                  cursor: 'pointer',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                }}
-                              >
-                                <Plus size={10} />
-                              </button>
+                              <>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); openCreateModal('row', shelf.id); }}
+                                  style={{
+                                    padding: '3px 6px',
+                                    fontSize: '11px',
+                                    border: '1px solid var(--border)',
+                                    borderRadius: 'var(--radius)',
+                                    background: 'var(--bg-surface)',
+                                    cursor: 'pointer',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                  }}
+                                  title="Add single row"
+                                >
+                                  <Plus size={10} />
+                                </button>
+                                <button
+                                  onClick={(e) => { 
+                                    e.stopPropagation(); 
+                                    setParentId(shelf.id);
+                                    setModalType('bulk-create-rows');
+                                  }}
+                                  style={{
+                                    padding: '3px 6px',
+                                    fontSize: '9px',
+                                    border: '1px solid var(--brand)',
+                                    borderRadius: 'var(--radius)',
+                                    background: 'var(--bg-surface)',
+                                    color: 'var(--brand)',
+                                    cursor: 'pointer',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '2px',
+                                    fontWeight: 600,
+                                  }}
+                                  title="Bulk create rows (A-Z)"
+                                >
+                                  <Plus size={8} />
+                                  Bulk
+                                </button>
+                              </>
                             )}
                             {canDelete && (
                               <button
@@ -465,22 +644,49 @@ export default function StructurePage() {
                                     {row.qrCode}
                                   </span>
                                   {canCreate && (
-                                    <button
-                                      onClick={(e) => { e.stopPropagation(); openCreateModal('slot', row.id); }}
-                                      style={{
-                                        padding: '2px 5px',
-                                        fontSize: '10px',
-                                        border: '1px solid var(--border)',
-                                        borderRadius: 'var(--radius)',
-                                        background: 'var(--bg-surface)',
-                                        cursor: 'pointer',
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                      }}
-                                    >
-                                      <Plus size={9} />
-                                    </button>
+                                    <>
+                                      <button
+                                        onClick={(e) => { e.stopPropagation(); openCreateModal('slot', row.id); }}
+                                        style={{
+                                          padding: '2px 5px',
+                                          fontSize: '10px',
+                                          border: '1px solid var(--border)',
+                                          borderRadius: 'var(--radius)',
+                                          background: 'var(--bg-surface)',
+                                          cursor: 'pointer',
+                                          display: 'inline-flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                        }}
+                                        title="Add single slot"
+                                      >
+                                        <Plus size={9} />
+                                      </button>
+                                      <button
+                                        onClick={(e) => { 
+                                          e.stopPropagation(); 
+                                          setParentId(row.id);
+                                          setModalType('bulk-create-slots');
+                                        }}
+                                        style={{
+                                          padding: '2px 5px',
+                                          fontSize: '8px',
+                                          border: '1px solid var(--brand)',
+                                          borderRadius: 'var(--radius)',
+                                          background: 'var(--bg-surface)',
+                                          color: 'var(--brand)',
+                                          cursor: 'pointer',
+                                          display: 'inline-flex',
+                                          alignItems: 'center',
+                                          gap: '2px',
+                                          fontWeight: 600,
+                                        }}
+                                        title="Bulk create slots (1-N)"
+                                      >
+                                        <Plus size={7} />
+                                        Bulk
+                                      </button>
+                                    </>
                                   )}
                                   {canDelete && (
                                     <button
@@ -784,6 +990,293 @@ export default function StructurePage() {
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
               <Button variant="secondary" onClick={() => setModalType(null)}>
                 Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Create Slots Modal */}
+      {modalType === 'bulk-create-slots' && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setModalType(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'var(--bg-surface)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '24px',
+              width: '90%',
+              maxWidth: '600px',
+              border: '1px solid var(--border)',
+            }}
+          >
+            <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 600 }}>
+              Bulk Create Slots
+            </h3>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>
+              Create multiple slots at once with sequential naming
+            </p>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
+                Name Pattern
+              </label>
+              <Input
+                value={bulkSlotForm.namePattern}
+                onChange={(e) => setBulkSlotForm({ ...bulkSlotForm, namePattern: e.target.value })}
+                placeholder="Slot {n}"
+              />
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                Use {'{n}'} for number placeholder (e.g., "Slot {'{n}'}" → Slot 1, Slot 2...)
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
+                QR Code Pattern
+              </label>
+              <Input
+                value={bulkSlotForm.qrPattern}
+                onChange={(e) => setBulkSlotForm({ ...bulkSlotForm, qrPattern: e.target.value })}
+                placeholder="SLOT-{n}"
+              />
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                Use {'{n}'} for number placeholder (e.g., "QR-SLOT-{'{n}'}" → QR-SLOT-1, QR-SLOT-2...)
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
+                  Start Number
+                </label>
+                <Input
+                  type="number"
+                  value={String(bulkSlotForm.startNumber)}
+                  onChange={(e) => setBulkSlotForm({ ...bulkSlotForm, startNumber: parseInt(e.target.value) || 1 })}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
+                  End Number
+                </label>
+                <Input
+                  type="number"
+                  value={String(bulkSlotForm.endNumber)}
+                  onChange={(e) => setBulkSlotForm({ ...bulkSlotForm, endNumber: parseInt(e.target.value) || 10 })}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
+                  Position Start
+                </label>
+                <Input
+                  type="number"
+                  value={String(bulkSlotForm.positionStart)}
+                  onChange={(e) => setBulkSlotForm({ ...bulkSlotForm, positionStart: parseInt(e.target.value) || 1 })}
+                />
+              </div>
+            </div>
+
+            {/* Preview */}
+            <div style={{ 
+              padding: '12px', 
+              background: 'var(--bg-subtle)', 
+              borderRadius: 'var(--radius)', 
+              marginBottom: '20px',
+              border: '1px solid var(--border)',
+            }}>
+              <div style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', color: 'var(--text-secondary)' }}>
+                Preview (first 3 of {bulkSlotForm.endNumber - bulkSlotForm.startNumber + 1} slots):
+              </div>
+              {[bulkSlotForm.startNumber, bulkSlotForm.startNumber + 1, bulkSlotForm.startNumber + 2]
+                .filter(n => n <= bulkSlotForm.endNumber)
+                .map((n, idx) => {
+                  const name = bulkSlotForm.namePattern.replace('{n}', String(n));
+                  const qr = bulkSlotForm.qrPattern.replace('{n}', String(n));
+                  const pos = bulkSlotForm.positionStart + idx;
+                  return (
+                    <div key={n} style={{ fontSize: '11px', marginBottom: '4px', display: 'flex', gap: '8px' }}>
+                      <span style={{ fontWeight: 600, color: 'var(--success)' }}>✓</span>
+                      <span style={{ flex: 1 }}>{name}</span>
+                      <span style={{ color: 'var(--text-muted)', fontFamily: 'monospace' }}>{qr}</span>
+                      <span style={{ color: 'var(--text-muted)' }}>pos: {pos}</span>
+                    </div>
+                  );
+                })}
+              {bulkSlotForm.endNumber - bulkSlotForm.startNumber > 2 && (
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                  ... and {bulkSlotForm.endNumber - bulkSlotForm.startNumber - 2} more
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <Button variant="secondary" onClick={() => setModalType(null)}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleBulkCreateSlots}
+                disabled={bulkCreateSlotsMutation.isPending || !bulkSlotForm.namePattern || !bulkSlotForm.qrPattern || bulkSlotForm.endNumber < bulkSlotForm.startNumber}
+              >
+                {bulkCreateSlotsMutation.isPending 
+                  ? 'Creating...' 
+                  : `Create ${bulkSlotForm.endNumber - bulkSlotForm.startNumber + 1} Slots`}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Create Rows Modal */}
+      {modalType === 'bulk-create-rows' && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setModalType(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'var(--bg-surface)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '24px',
+              width: '90%',
+              maxWidth: '600px',
+              border: '1px solid var(--border)',
+            }}
+          >
+            <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 600 }}>
+              Bulk Create Rows
+            </h3>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>
+              Create multiple rows at once with letter sequence (A-Z)
+            </p>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
+                Name Pattern
+              </label>
+              <Input
+                value={bulkRowForm.namePattern}
+                onChange={(e) => setBulkRowForm({ ...bulkRowForm, namePattern: e.target.value })}
+                placeholder="Row {letter}"
+              />
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                Use {'{letter}'} for letter placeholder (e.g., "Row {'{letter}'}" → Row A, Row B...)
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
+                QR Code Pattern
+              </label>
+              <Input
+                value={bulkRowForm.qrPattern}
+                onChange={(e) => setBulkRowForm({ ...bulkRowForm, qrPattern: e.target.value })}
+                placeholder="ROW-{letter}"
+              />
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                Use {'{letter}'} for letter placeholder (e.g., "QR-ROW-{'{letter}'}" → QR-ROW-A, QR-ROW-B...)
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
+                Letter Sequence
+              </label>
+              <Input
+                value={bulkRowForm.sequence}
+                onChange={(e) => setBulkRowForm({ ...bulkRowForm, sequence: e.target.value })}
+                placeholder="A-J"
+              />
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                Format: START-END (e.g., "A-Z" for all letters, "A-J" for first 10)
+              </div>
+            </div>
+
+            {/* Preview */}
+            <div style={{ 
+              padding: '12px', 
+              background: 'var(--bg-subtle)', 
+              borderRadius: 'var(--radius)', 
+              marginBottom: '20px',
+              border: '1px solid var(--border)',
+            }}>
+              <div style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', color: 'var(--text-secondary)' }}>
+                Preview (first 3):
+              </div>
+              {(() => {
+                const [start, end] = bulkRowForm.sequence.split('-');
+                if (!start || !end || !start.match(/[A-Z]/i) || !end.match(/[A-Z]/i)) {
+                  return <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Invalid sequence format</div>;
+                }
+                const startCode = start.toUpperCase().charCodeAt(0);
+                const endCode = end.toUpperCase().charCodeAt(0);
+                const total = endCode - startCode + 1;
+                
+                return (
+                  <>
+                    {[0, 1, 2].filter(i => startCode + i <= endCode).map((i) => {
+                      const letter = String.fromCharCode(startCode + i);
+                      const name = bulkRowForm.namePattern.replace('{letter}', letter);
+                      const qr = bulkRowForm.qrPattern.replace('{letter}', letter);
+                      return (
+                        <div key={letter} style={{ fontSize: '11px', marginBottom: '4px', display: 'flex', gap: '8px' }}>
+                          <span style={{ fontWeight: 600, color: 'var(--success)' }}>✓</span>
+                          <span style={{ flex: 1 }}>{name}</span>
+                          <span style={{ color: 'var(--text-muted)', fontFamily: 'monospace' }}>{qr}</span>
+                          <span style={{ color: 'var(--text-muted)' }}>pos: {i + 1}</span>
+                        </div>
+                      );
+                    })}
+                    {total > 3 && (
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                        ... and {total - 3} more ({total} total)
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <Button variant="secondary" onClick={() => setModalType(null)}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleBulkCreateRows}
+                disabled={bulkCreateRowsMutation.isPending || !bulkRowForm.namePattern || !bulkRowForm.qrPattern || !bulkRowForm.sequence.match(/^[A-Z]-[A-Z]$/i)}
+              >
+                {bulkCreateRowsMutation.isPending 
+                  ? 'Creating...' 
+                  : `Create Rows ${bulkRowForm.sequence}`}
               </Button>
             </div>
           </div>

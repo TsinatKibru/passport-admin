@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import { apiClient } from '@/lib/api/client';
 import { useRole } from '@/lib/auth/RoleContext';
 import { Shell } from '@/components/layout/Shell';
@@ -133,6 +134,11 @@ export default function PassportsPage() {
       queryClient.invalidateQueries({ queryKey: ['passports'] });
       setModalType(null);
       setRegisterForm({ qrCode: '', holderName: '', holderIdNo: '' });
+      toast.success('Passport registered successfully');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to register passport';
+      toast.error(message);
     },
   });
 
@@ -142,12 +148,18 @@ export default function PassportsPage() {
       const endpoint = action === 'RETURN' ? `/passports/${id}/return` : `/passports/${id}/assign`;
       await apiClient.post(endpoint, { boxId });
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['passports'] });
       queryClient.invalidateQueries({ queryKey: ['boxes'] });
       setModalType(null);
       setSelectedPassport(null);
       setTargetBoxId('');
+      const action = variables.action === 'RETURN' ? 'returned to box' : 'assigned to box';
+      toast.success(`Passport ${action} successfully`);
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to assign passport';
+      toast.error(message);
     },
   });
 
@@ -159,6 +171,11 @@ export default function PassportsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['passports'] });
       queryClient.invalidateQueries({ queryKey: ['boxes'] });
+      toast.success('Passport issued to owner successfully');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to issue passport';
+      toast.error(message);
     },
   });
 
@@ -171,12 +188,17 @@ export default function PassportsPage() {
         action: 'ASSIGN',
       });
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['passports'] });
       queryClient.invalidateQueries({ queryKey: ['boxes'] });
       setSelectedIds(new Set());
       setModalType(null);
       setTargetBoxId('');
+      toast.success(`${variables.passportIds.length} passports assigned successfully`);
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to batch assign passports';
+      toast.error(message);
     },
   });
 
@@ -187,6 +209,11 @@ export default function PassportsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['passports'] });
+      toast.success('Passport deleted successfully');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to delete passport';
+      toast.error(message);
     },
   });
 

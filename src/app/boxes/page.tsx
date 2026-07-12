@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import { apiClient } from '@/lib/api/client';
 import { useRole } from '@/lib/auth/RoleContext';
 import { Shell } from '@/components/layout/Shell';
@@ -67,7 +68,7 @@ interface PaginatedResponse<T> {
   totalPages: number;
 }
 
-type ModalType = 'create' | 'move' | null;
+type ModalType = 'create' | 'move' | 'bulk-register' | null;
 
 const LIMIT = 10;
 const SLOT_PICKER_LIMIT = 15;
@@ -88,10 +89,34 @@ export default function BoxesPage() {
   // Create box form
   const [createForm, setCreateForm] = useState({ qrCode: '', label: '', capacity: '10' });
   
+  // Bulk register form
+  const [bulkRegisterForm, setBulkRegisterForm] = useState({
+    labelPattern: 'MB-{n:04d}',
+    qrPattern: 'BOX-{n:04d}',
+    startNumber: 1,
+    endNumber: 10,
+    capacity: 10,
+  });
+
+  // Debug: log form state when it changes
+  useEffect(() => {
+    console.log('Bulk Register Form State:', bulkRegisterForm);
+  }, [bulkRegisterForm]);
+  
   // Move box - slot picker with client-side search and pagination
   const [slotSearchInput, setSlotSearchInput] = useState('');
   const [slotPage, setSlotPage] = useState(1);
   const [selectedSlotId, setSelectedSlotId] = useState<string>('');
+
+  // Helper function to format pattern with zero-padding support
+  const formatPattern = (pattern: string, number: number): string => {
+    return pattern.replace(/\{n(:(\d+)d)?\}/g, (match, _, width) => {
+      if (width) {
+        return String(number).padStart(parseInt(width), '0');
+      }
+      return String(number);
+    });
+  };
 
   // Debounce search input
   useEffect(() => {
@@ -158,6 +183,11 @@ export default function BoxesPage() {
       queryClient.invalidateQueries({ queryKey: ['boxes'] });
       setModalType(null);
       setCreateForm({ qrCode: '', label: '', capacity: '10' });
+      toast.success('Box created successfully');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to create box';
+      toast.error(message);
     },
   });
 
@@ -171,6 +201,11 @@ export default function BoxesPage() {
       setModalType(null);
       setSelectedBox(null);
       setSelectedSlotId('');
+      toast.success('Box moved successfully');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to move box';
+      toast.error(message);
     },
   });
 
@@ -181,6 +216,62 @@ export default function BoxesPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['boxes'] });
+      toast.success('Box deleted successfully');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to delete box';
+      toast.error(message);
+    },
+  });
+
+  // Bulk register boxes mutation
+  const bulkRegisterBoxesMutation = useMutation({
+    mutationFn: async (pattern: typeof bulkRegisterForm) => {
+      const boxes = [];
+      for (let i = pattern.startNumber; i <= pattern.endNumber; i++) {
+        const label = formatPattern(pattern.labelPattern, i);
+        const qrCode = formatPattern(pattern.qrPattern, i);
+        boxes.push({ label, qrCode, capacity: pattern.capacity });
+      }
+      
+      // Create all boxes sequentially
+      const results = [];
+      for (const box of boxes) {
+        try {
+          const res = await apiClient.post('/boxes', box);
+          results.push({ success: true, data: res.data });
+        } catch (error: any) {
+          results.push({ 
+            success: false, 
+            error: error.response?.data?.message || 'Failed',
+            box: box.label 
+          });
+        }
+      }
+      return results;
+    },
+    onSuccess: (results) => {
+      queryClient.invalidateQueries({ queryKey: ['boxes'] });
+      const successCount = results.filter(r => r.success).length;
+      const failCount = results.filter(r => !r.success).length;
+      
+      setModalType(null);
+      setBulkRegisterForm({
+        labelPattern: 'MB-{n:04d}',
+        qrPattern: 'BOX-{n:04d}',
+        startNumber: 1,
+        endNumber: 10,
+        capacity: 10,
+      });
+      
+      if (failCount === 0) {
+        toast.success(`${successCount} boxes registered successfully`);
+      } else {
+        toast.error(`Registered ${successCount} boxes, ${failCount} failed (likely duplicates)`);
+      }
+    },
+    onError: (error: any) => {
+      toast.error('Bulk registration failed. Please try again.');
     },
   });
 
@@ -209,6 +300,10 @@ export default function BoxesPage() {
     }
   };
 
+  const handleBulkRegister = () => {
+    bulkRegisterBoxesMutation.mutate(bulkRegisterForm);
+  };
+
   return (
     <Shell title="Movable Boxes" subtitle="Manage box inventory and assignments">
       <Card>
@@ -217,10 +312,16 @@ export default function BoxesPage() {
           subtitle={`${totalRecords} boxes in system`}
           action={
             canCreate && (
-              <Button onClick={() => setModalType('create')} variant="primary">
-                <Plus size={14} />
-                Add Box
-              </Button>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <Button onClick={() => setModalType('create')} variant="secondary" size="sm">
+                  <Plus size={14} />
+                  Add Box
+                </Button>
+                <Button onClick={() => setModalType('bulk-register')} variant="primary" size="sm">
+                  <Plus size={14} />
+                  Bulk Register
+                </Button>
+              </div>
             )
           }
         />
@@ -674,6 +775,168 @@ export default function BoxesPage() {
                 disabled={moveBoxMutation.isPending || !selectedSlotId}
               >
                 {moveBoxMutation.isPending ? 'Moving...' : 'Move Box'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Register Boxes Modal */}
+      {modalType === 'bulk-register' && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setModalType(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'var(--bg-surface)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '24px',
+              width: '90%',
+              maxWidth: '650px',
+              border: '1px solid var(--border)',
+            }}
+          >
+            <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 600 }}>
+              Bulk Register Boxes
+            </h3>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>
+              Register multiple boxes at once with sequential labeling
+            </p>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
+                Label Pattern
+              </label>
+              <Input
+                value={bulkRegisterForm.labelPattern}
+                onChange={(e) => setBulkRegisterForm({ ...bulkRegisterForm, labelPattern: e.target.value })}
+                placeholder="MB-{n:04d}"
+              />
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                Use {'{n}'} for number. Add :04d for zero-padding (e.g., MB-{'{n:04d}'} → MB-0001, MB-0002)
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
+                QR Code Pattern
+              </label>
+              <Input
+                value={bulkRegisterForm.qrPattern}
+                onChange={(e) => setBulkRegisterForm({ ...bulkRegisterForm, qrPattern: e.target.value })}
+                placeholder="BOX-{n:04d}"
+              />
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                QR codes must be globally unique. Use same pattern format as label.
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
+                  Start Number
+                </label>
+                <Input
+                  type="number"
+                  value={String(bulkRegisterForm.startNumber)}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    setBulkRegisterForm({ ...bulkRegisterForm, startNumber: isNaN(val) ? 1 : Math.max(1, val) });
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
+                  End Number
+                </label>
+                <Input
+                  type="number"
+                  value={String(bulkRegisterForm.endNumber)}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    setBulkRegisterForm({ ...bulkRegisterForm, endNumber: isNaN(val) ? 10 : Math.max(1, val) });
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
+                  Capacity
+                </label>
+                <Input
+                  type="number"
+                  value={String(bulkRegisterForm.capacity)}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    setBulkRegisterForm({ ...bulkRegisterForm, capacity: isNaN(val) ? 10 : Math.max(1, val) });
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Preview */}
+            <div style={{ 
+              padding: '12px', 
+              background: 'var(--bg-subtle)', 
+              borderRadius: 'var(--radius)', 
+              marginBottom: '20px',
+              border: '1px solid var(--border)',
+            }}>
+              <div style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', color: 'var(--text-secondary)' }}>
+                Preview (first 3 of {bulkRegisterForm.endNumber - bulkRegisterForm.startNumber + 1} boxes):
+              </div>
+              {[bulkRegisterForm.startNumber, bulkRegisterForm.startNumber + 1, bulkRegisterForm.startNumber + 2]
+                .filter(n => n <= bulkRegisterForm.endNumber)
+                .map((n) => {
+                  const label = formatPattern(bulkRegisterForm.labelPattern, n);
+                  const qr = formatPattern(bulkRegisterForm.qrPattern, n);
+                  return (
+                    <div key={n} style={{ fontSize: '11px', marginBottom: '4px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <span style={{ fontWeight: 600, color: 'var(--success)' }}>✓</span>
+                      <Package size={12} color="var(--brand)" />
+                      <span style={{ flex: 1, fontWeight: 600 }}>{label}</span>
+                      <span style={{ color: 'var(--text-muted)', fontFamily: 'monospace', fontSize: '10px' }}>{qr}</span>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>Cap: {bulkRegisterForm.capacity}</span>
+                    </div>
+                  );
+                })}
+              {bulkRegisterForm.endNumber - bulkRegisterForm.startNumber > 2 && (
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                  ... and {bulkRegisterForm.endNumber - bulkRegisterForm.startNumber - 2} more
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <Button variant="secondary" onClick={() => setModalType(null)}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleBulkRegister}
+                disabled={
+                  bulkRegisterBoxesMutation.isPending || 
+                  !bulkRegisterForm.labelPattern.trim() || 
+                  !bulkRegisterForm.qrPattern.trim() || 
+                  bulkRegisterForm.endNumber < bulkRegisterForm.startNumber ||
+                  bulkRegisterForm.capacity < 1
+                }
+              >
+                {bulkRegisterBoxesMutation.isPending 
+                  ? 'Registering...' 
+                  : `Register ${Math.max(0, bulkRegisterForm.endNumber - bulkRegisterForm.startNumber + 1)} Boxes`}
               </Button>
             </div>
           </div>

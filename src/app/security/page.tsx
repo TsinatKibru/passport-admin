@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { useRole } from '@/lib/auth/RoleContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import { apiClient } from '@/lib/api/client';
 import { Check, X, Shield, Users } from 'lucide-react';
 
@@ -39,8 +40,13 @@ export default function SecurityPage() {
     mutationFn: async ({ userId, newRole }: { userId: string; newRole: 'ADMIN' | 'STAFF' }) => {
       await apiClient.post(`/auth/users/${userId}/role`, { role: newRole });
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast.success(`User role changed to ${variables.newRole} successfully`);
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to change user role';
+      toast.error(message);
     },
   });
 
