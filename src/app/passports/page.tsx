@@ -68,6 +68,12 @@ export default function PassportsPage() {
   const [liveSearch, setLiveSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'IN_BOX' | 'ISSUED' | ''>('');
   
+  // Box modal pagination and filters
+  const [boxPage, setBoxPage] = useState(1);
+  const [boxSearch, setBoxSearch] = useState('');
+  const [boxRoomFilter, setBoxRoomFilter] = useState('');
+  const BOX_LIMIT = 20;
+  
   // Selection state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   
@@ -130,18 +136,33 @@ export default function PassportsPage() {
   const totalPages = data?.totalPages ?? 1;
   const totalRecords = data?.total ?? 0;
 
-  // Fetch available boxes (pass neededSpaces for batch operations)
+  // Fetch available boxes (pass neededSpaces for batch operations) with pagination
   const neededSpaces = modalType === 'batch-assign' ? selectedIds.size : 1;
-  const { data: availableBoxes = [] } = useQuery<MovableBox[]>({
-    queryKey: ['boxes', 'available', neededSpaces],
+  const { data: boxesData, isLoading: boxesLoading } = useQuery<{
+    data: MovableBox[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasMore: boolean;
+  }>({
+    queryKey: ['boxes', 'available', neededSpaces, boxPage, boxSearch, boxRoomFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
       params.set('neededSpaces', String(neededSpaces));
+      params.set('page', String(boxPage));
+      params.set('limit', String(BOX_LIMIT));
+      if (boxSearch) params.set('search', boxSearch);
+      if (boxRoomFilter) params.set('roomId', boxRoomFilter);
       const res = await apiClient.get(`/boxes/available?${params}`);
       return res.data;
     },
     enabled: modalType === 'assign' || modalType === 'batch-assign',
   });
+
+  const availableBoxes = boxesData?.data ?? [];
+  const boxTotalPages = boxesData?.totalPages ?? 1;
+  const boxTotal = boxesData?.total ?? 0;
 
   // Create passport mutation
   const createPassportMutation = useMutation({
@@ -715,13 +736,41 @@ export default function PassportsPage() {
             </h3>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px' }}>
               {modalType === 'batch-assign' 
-                ? `Assigning ${selectedIds.size} selected passports`
+                ? `Assigning ${selectedIds.size} selected passports · ${boxTotal} boxes available`
                 : `Assigning passport belonging to ${selectedPassport?.holderName}`
               }
             </p>
 
-            <div style={{ flex: 1, overflow: 'auto', marginBottom: '16px' }}>
-              {availableBoxes.length === 0 ? (
+            {/* Search and Filter Bar */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+              <div style={{ flex: 1, position: 'relative' }}>
+                <Input
+                  type="text"
+                  placeholder="Search by label or QR code..."
+                  value={boxSearch}
+                  onChange={(e) => {
+                    setBoxSearch(e.target.value);
+                    setBoxPage(1); // Reset to page 1 on search
+                  }}
+                  style={{ paddingRight: '32px' }}
+                />
+                <Search 
+                  size={14} 
+                  color="var(--text-muted)" 
+                  style={{ position: 'absolute', right: '10px', top: '11px', pointerEvents: 'none' }} 
+                />
+              </div>
+              {/* Room filter would go here if we had rooms query */}
+            </div>
+
+            {boxesLoading && (
+              <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
+                Loading boxes...
+              </div>
+            )}
+
+            <div style={{ flex: 1, overflow: 'auto', marginBottom: '16px', minHeight: '200px' }}>
+              {!boxesLoading && availableBoxes.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
                   <Package size={48} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
                   <p>No available boxes with sufficient vacant slots</p>
@@ -782,11 +831,48 @@ export default function PassportsPage() {
               )}
             </div>
 
+            {/* Pagination Controls */}
+            {boxTotalPages > 1 && !boxesLoading && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '16px',
+                padding: '12px',
+                background: 'var(--bg-subtle)',
+                borderRadius: 'var(--radius)',
+              }}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setBoxPage(p => Math.max(1, p - 1))}
+                  disabled={boxPage === 1}
+                >
+                  <ChevronLeft size={14} />
+                  Prev
+                </Button>
+                <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                  Page {boxPage} of {boxTotalPages} · {boxTotal} boxes
+                </span>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setBoxPage(p => Math.min(boxTotalPages, p + 1))}
+                  disabled={boxPage === boxTotalPages}
+                >
+                  Next
+                  <ChevronRight size={14} />
+                </Button>
+              </div>
+            )}
+
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
               <Button variant="secondary" onClick={() => { 
                 setModalType(null); 
                 setSelectedPassport(null); 
-                setTargetBoxId(''); 
+                setTargetBoxId('');
+                setBoxPage(1); // Reset pagination
+                setBoxSearch(''); // Reset search
               }}>
                 Cancel
               </Button>
