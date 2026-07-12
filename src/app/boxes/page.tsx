@@ -11,6 +11,7 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '@/components/ui/Table';
 import { 
   Package, 
@@ -107,6 +108,15 @@ export default function BoxesPage() {
   const [slotSearchInput, setSlotSearchInput] = useState('');
   const [slotPage, setSlotPage] = useState(1);
   const [selectedSlotId, setSelectedSlotId] = useState<string>('');
+
+  // Confirm delete state
+  const [confirmDelete, setConfirmDelete] = useState<{
+    isOpen: boolean;
+    box: Box | null;
+  }>({
+    isOpen: false,
+    box: null,
+  });
 
   // Helper function to format pattern with zero-padding support
   const formatPattern = (pattern: string, number: number): string => {
@@ -231,7 +241,7 @@ export default function BoxesPage() {
       for (let i = pattern.startNumber; i <= pattern.endNumber; i++) {
         const label = formatPattern(pattern.labelPattern, i);
         const qrCode = formatPattern(pattern.qrPattern, i);
-        boxes.push({ label, qrCode, capacity: pattern.capacity });
+        boxes.push({ label, qrCode });
       }
       
       // Create all boxes sequentially
@@ -241,9 +251,11 @@ export default function BoxesPage() {
           const res = await apiClient.post('/boxes', box);
           results.push({ success: true, data: res.data });
         } catch (error: any) {
+          const errorMsg = error.response?.data?.message || 'Failed';
+          console.error(`Failed to create ${box.label}:`, errorMsg);
           results.push({ 
             success: false, 
-            error: error.response?.data?.message || 'Failed',
+            error: errorMsg,
             box: box.label 
           });
         }
@@ -267,7 +279,24 @@ export default function BoxesPage() {
       if (failCount === 0) {
         toast.success(`${successCount} boxes registered successfully`);
       } else {
-        toast.error(`Registered ${successCount} boxes, ${failCount} failed (likely duplicates)`);
+        // Show detailed errors
+        const failedBoxes = results.filter(r => !r.success);
+        const firstError = failedBoxes[0]?.error || 'Unknown error';
+        
+        if (successCount > 0) {
+          toast.error(
+            `Registered ${successCount} boxes, ${failCount} failed. First error: ${firstError}`,
+            { duration: 6000 }
+          );
+        } else {
+          toast.error(
+            `All ${failCount} boxes failed. Error: ${firstError}`,
+            { duration: 6000 }
+          );
+        }
+        
+        // Log all errors to console for debugging
+        console.log('Failed boxes:', failedBoxes);
       }
     },
     onError: (error: any) => {
@@ -292,11 +321,16 @@ export default function BoxesPage() {
 
   const handleDeleteBox = (box: Box) => {
     if (box.occupiedCount > 0) {
-      alert(`Cannot delete box ${box.label}. It contains ${box.occupiedCount} passport(s).`);
+      toast.error(`Cannot delete box ${box.label}. It contains ${box.occupiedCount} passport(s).`);
       return;
     }
-    if (window.confirm(`Are you sure you want to delete box ${box.label}? This action cannot be undone.`)) {
-      deleteBoxMutation.mutate(box.id);
+    setConfirmDelete({ isOpen: true, box });
+  };
+
+  const confirmDeleteAction = () => {
+    if (confirmDelete.box) {
+      deleteBoxMutation.mutate(confirmDelete.box.id);
+      setConfirmDelete({ isOpen: false, box: null });
     }
   };
 
@@ -377,15 +411,16 @@ export default function BoxesPage() {
                 ? `${Math.round((box.occupiedCount / box.capacity) * 100)}%`
                 : '0%';
 
+              // Use backend status directly
               let statusVariant: 'success' | 'warning' | 'danger' = 'success';
-              let statusLabel = 'ACTIVE';
+              let statusLabel = box.status;
 
-              if (box.occupiedCount === box.capacity) {
+              if (box.status === 'FULL') {
                 statusVariant = 'danger';
-                statusLabel = 'FULL';
-              } else if (box.occupiedCount === 0) {
+              } else if (box.status === 'INACTIVE') {
                 statusVariant = 'warning';
-                statusLabel = 'INACTIVE';
+              } else {
+                statusVariant = 'success';
               }
 
               return (
@@ -942,6 +977,18 @@ export default function BoxesPage() {
           </div>
         </div>
       )}
+
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={confirmDelete.isOpen}
+        onClose={() => setConfirmDelete({ isOpen: false, box: null })}
+        onConfirm={confirmDeleteAction}
+        title="Confirm Deletion"
+        message={confirmDelete.box ? `Are you sure you want to delete box ${confirmDelete.box.label}? This action cannot be undone.` : ''}
+        confirmText="Delete"
+        variant="danger"
+        isLoading={deleteBoxMutation.isPending}
+      />
     </Shell>
   );
 }

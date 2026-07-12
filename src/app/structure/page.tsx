@@ -11,6 +11,7 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { 
   ChevronRight, 
   ChevronDown, 
@@ -62,6 +63,7 @@ interface Slot {
   row: Row;
   createdAt: string;
   updatedAt: string;
+  boxes?: MovableBox[];  // Optional: may be included in responses
 }
 
 interface MovableBox {
@@ -91,6 +93,19 @@ export default function StructurePage() {
   const [modalType, setModalType] = useState<ModalType>(null);
   const [parentId, setParentId] = useState<string>('');
   const [formData, setFormData] = useState({ name: '', qrCode: '', position: 1 });
+  
+  // Confirm delete state
+  const [confirmDelete, setConfirmDelete] = useState<{
+    isOpen: boolean;
+    type: string;
+    id: string;
+    name: string;
+  }>({
+    isOpen: false,
+    type: '',
+    id: '',
+    name: '',
+  });
   
   // Bulk create state
   const [bulkSlotForm, setBulkSlotForm] = useState({
@@ -406,9 +421,12 @@ export default function StructurePage() {
   };
 
   const handleDelete = (type: string, id: string, name: string) => {
-    if (window.confirm(`Are you sure you want to delete ${name}? This action cannot be undone.`)) {
-      deleteMutation.mutate({ type, id });
-    }
+    setConfirmDelete({ isOpen: true, type, id, name });
+  };
+
+  const confirmDeleteAction = () => {
+    deleteMutation.mutate({ type: confirmDelete.type, id: confirmDelete.id });
+    setConfirmDelete({ isOpen: false, type: '', id: '', name: '' });
   };
 
   const handleAssignBox = (boxId: string) => {
@@ -798,10 +816,25 @@ export default function StructurePage() {
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
                   STATUS
                 </div>
-                <Badge variant="success">Available</Badge>
+                {(() => {
+                  const boxes = selectedSlot.boxes || [];
+                  const hasBox = boxes.length > 0;
+                  
+                  if (hasBox) {
+                    return (
+                      <div>
+                        <Badge variant="warning">Occupied</Badge>
+                        <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                          {boxes.map(box => box.label).join(', ')}
+                        </div>
+                      </div>
+                    );
+                  }
+                  return <Badge variant="success">Available</Badge>;
+                })()}
               </div>
 
-              {canCreate && (
+              {canCreate && !(selectedSlot.boxes && selectedSlot.boxes.length > 0) && (
                 <div style={{ width: '100%' }}>
                   <Button onClick={() => openCreateModal('assign-box')} variant="primary">
                     <Package size={14} />
@@ -1282,6 +1315,18 @@ export default function StructurePage() {
           </div>
         </div>
       )}
+
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={confirmDelete.isOpen}
+        onClose={() => setConfirmDelete({ isOpen: false, type: '', id: '', name: '' })}
+        onConfirm={confirmDeleteAction}
+        title="Confirm Deletion"
+        message={`Are you sure you want to delete ${confirmDelete.name}? This action cannot be undone.`}
+        confirmText="Delete"
+        variant="danger"
+        isLoading={deleteMutation.isPending}
+      />
     </Shell>
   );
 }

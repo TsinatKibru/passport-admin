@@ -4,11 +4,13 @@ import { Shell } from '@/components/layout/Shell';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { useRole } from '@/lib/auth/RoleContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { apiClient } from '@/lib/api/client';
 import { Check, X, Shield, Users } from 'lucide-react';
+import { useState } from 'react';
 
 interface User {
   id: string;
@@ -23,6 +25,17 @@ interface User {
 export default function SecurityPage() {
   const { isAdmin, isLoading: roleLoading, user: currentUser } = useRole();
   const queryClient = useQueryClient();
+
+  // Confirm role change state
+  const [confirmRoleChange, setConfirmRoleChange] = useState<{
+    isOpen: boolean;
+    userId: string;
+    newRole: 'ADMIN' | 'STAFF';
+  }>({
+    isOpen: false,
+    userId: '',
+    newRole: 'STAFF',
+  });
 
   // Fetch all users (Admin only)
   const { data: users = [], isLoading: usersLoading } = useQuery({
@@ -51,9 +64,15 @@ export default function SecurityPage() {
   });
 
   const handleRoleChange = (userId: string, newRole: 'ADMIN' | 'STAFF') => {
-    if (window.confirm(`Are you sure you want to change this user's role to ${newRole}?`)) {
-      changeRoleMutation.mutate({ userId, newRole });
-    }
+    setConfirmRoleChange({ isOpen: true, userId, newRole });
+  };
+
+  const confirmRoleChangeAction = () => {
+    changeRoleMutation.mutate({ 
+      userId: confirmRoleChange.userId, 
+      newRole: confirmRoleChange.newRole 
+    });
+    setConfirmRoleChange({ isOpen: false, userId: '', newRole: 'STAFF' });
   };
 
   // RBAC Matrix data
@@ -349,6 +368,18 @@ export default function SecurityPage() {
           </Card>
         )}
       </div>
+
+      {/* Confirm Role Change Modal */}
+      <ConfirmModal
+        isOpen={confirmRoleChange.isOpen}
+        onClose={() => setConfirmRoleChange({ isOpen: false, userId: '', newRole: 'STAFF' })}
+        onConfirm={confirmRoleChangeAction}
+        title="Confirm Role Change"
+        message={`Are you sure you want to change this user's role to ${confirmRoleChange.newRole}?`}
+        confirmText="Change Role"
+        variant="primary"
+        isLoading={changeRoleMutation.isPending}
+      />
     </Shell>
   );
 }

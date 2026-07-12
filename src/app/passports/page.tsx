@@ -11,6 +11,7 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '@/components/ui/Table';
 import { 
   Plus, 
@@ -73,6 +74,23 @@ export default function PassportsPage() {
   // Modal state
   const [modalType, setModalType] = useState<ModalType>(null);
   const [selectedPassport, setSelectedPassport] = useState<Passport | null>(null);
+
+  // Confirm dialogs state
+  const [confirmIssue, setConfirmIssue] = useState<{
+    isOpen: boolean;
+    passport: Passport | null;
+  }>({
+    isOpen: false,
+    passport: null,
+  });
+
+  const [confirmDelete, setConfirmDelete] = useState<{
+    isOpen: boolean;
+    passport: Passport | null;
+  }>({
+    isOpen: false,
+    passport: null,
+  });
 
   // Form states
   const [registerForm, setRegisterForm] = useState({ qrCode: '', holderName: '', holderIdNo: '' });
@@ -243,14 +261,24 @@ export default function PassportsPage() {
   };
 
   const handleIssuePassport = (passport: Passport) => {
-    if (window.confirm(`Issue passport belonging to ${passport.holderName} to its owner?`)) {
-      issuePassportMutation.mutate(passport.id);
+    setConfirmIssue({ isOpen: true, passport });
+  };
+
+  const confirmIssueAction = () => {
+    if (confirmIssue.passport) {
+      issuePassportMutation.mutate(confirmIssue.passport.id);
+      setConfirmIssue({ isOpen: false, passport: null });
     }
   };
 
   const handleDeletePassport = (passport: Passport) => {
-    if (window.confirm(`Are you sure you want to delete passport belonging to ${passport.holderName}? This action cannot be undone.`)) {
-      deletePassportMutation.mutate(passport.id);
+    setConfirmDelete({ isOpen: true, passport });
+  };
+
+  const confirmDeleteAction = () => {
+    if (confirmDelete.passport) {
+      deletePassportMutation.mutate(confirmDelete.passport.id);
+      setConfirmDelete({ isOpen: false, passport: null });
     }
   };
 
@@ -773,6 +801,30 @@ export default function PassportsPage() {
           </div>
         </div>
       )}
+
+      {/* Confirm Issue Modal */}
+      <ConfirmModal
+        isOpen={confirmIssue.isOpen}
+        onClose={() => setConfirmIssue({ isOpen: false, passport: null })}
+        onConfirm={confirmIssueAction}
+        title="Issue Passport"
+        message={confirmIssue.passport ? `Issue passport belonging to ${confirmIssue.passport.holderName} to its owner?` : ''}
+        confirmText="Issue"
+        variant="primary"
+        isLoading={issuePassportMutation.isPending}
+      />
+
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={confirmDelete.isOpen}
+        onClose={() => setConfirmDelete({ isOpen: false, passport: null })}
+        onConfirm={confirmDeleteAction}
+        title="Confirm Deletion"
+        message={confirmDelete.passport ? `Are you sure you want to delete passport belonging to ${confirmDelete.passport.holderName}? This action cannot be undone.` : ''}
+        confirmText="Delete"
+        variant="danger"
+        isLoading={deletePassportMutation.isPending}
+      />
     </Shell>
   );
 }
