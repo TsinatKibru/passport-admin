@@ -175,15 +175,16 @@ export default function Dashboard() {
             {boxes.map((box) => {
               const location = box.location || 'Unassigned';
               
+              // Use the actual status from backend instead of computing it
               let statusVariant: 'success' | 'warning' | 'danger' = 'success';
-              let statusLabel = 'ACTIVE';
+              let statusLabel = box.status; // Use backend status directly
               
-              if (box.occupiedCount === box.capacity) {
+              if (box.status === 'FULL') {
                 statusVariant = 'danger';
-                statusLabel = 'FULL';
-              } else if (box.occupiedCount === 0) {
+              } else if (box.status === 'INACTIVE') {
                 statusVariant = 'warning';
-                statusLabel = 'INACTIVE';
+              } else {
+                statusVariant = 'success';
               }
 
               return (
