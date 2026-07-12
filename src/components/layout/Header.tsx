@@ -1,7 +1,9 @@
 'use client';
 
-import { Search, Bell, Moon, Sun, Menu } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Search, Bell, Moon, Sun, Menu, X } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { apiClient } from '@/lib/api/client';
 
 interface HeaderProps {
   title: string;
@@ -9,9 +11,23 @@ interface HeaderProps {
   onMenuToggle?: () => void;
 }
 
+interface SearchResult {
+  type: 'passport' | 'box' | 'slot';
+  id: string;
+  label: string;
+  subtitle: string;
+  link: string;
+}
+
 export default function Header({ title, subtitle, onMenuToggle }: HeaderProps) {
+  const router = useRouter();
   const [hasNotification] = useState(true);
   const [isDark, setIsDark] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('theme');
@@ -21,6 +37,95 @@ export default function Header({ title, subtitle, onMenuToggle }: HeaderProps) {
     setIsDark(shouldBeDark);
     document.documentElement.setAttribute('data-theme', shouldBeDark ? 'dark' : 'light');
   }, []);
+
+  // Close search results when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowResults(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Debounced search
+  useEffect(() => {
+    if (searchQuery.length < 2) {
+      setSearchResults([]);
+      setShowResults(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsSearching(true);
+      setShowResults(true);
+      try {
+        const results: SearchResult[] = [];
+
+        // Search passports
+        const passportsRes = await apiClient.get(`/passports?search=${encodeURIComponent(searchQuery)}&limit=3`);
+        const passports = passportsRes.data.data || [];
+        passports.forEach((p: any) => {
+          results.push({
+            type: 'passport',
+            id: p.id,
+            label: p.holderName,
+            subtitle: `ID: ${p.holderIdNo} • QR: ${p.qrCode}`,
+            link: `/passports`,
+          });
+        });
+
+        // Search boxes
+        const boxesRes = await apiClient.get(`/boxes?search=${encodeURIComponent(searchQuery)}&limit=3`);
+        const boxes = boxesRes.data.data || [];
+        boxes.forEach((b: any) => {
+          results.push({
+            type: 'box',
+            id: b.id,
+            label: b.label,
+            subtitle: `QR: ${b.qrCode} • ${b.occupiedCount}/${b.capacity} occupied`,
+            link: `/boxes`,
+          });
+        });
+
+        // Search slots
+        const slotsRes = await apiClient.get(`/location/slots?search=${encodeURIComponent(searchQuery)}&limit=3`);
+        const slots = slotsRes.data.data || [];
+        slots.forEach((s: any) => {
+          results.push({
+            type: 'slot',
+            id: s.id,
+            label: s.name,
+            subtitle: `QR: ${s.qrCode} • ${s.location || 'Location'}`,
+            link: `/structure`,
+          });
+        });
+
+        setSearchResults(results);
+      } catch (error) {
+        console.error('Search error:', error);
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const handleResultClick = (result: SearchResult) => {
+    router.push(result.link);
+    setSearchQuery('');
+    setShowResults(false);
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    setSearchResults([]);
+    setShowResults(false);
+  };
 
   const toggleTheme = () => {
     const newTheme = isDark ? 'light' : 'dark';
@@ -120,7 +225,7 @@ export default function Header({ title, subtitle, onMenuToggle }: HeaderProps) {
             }
           }
         `}</style>
-        <div style={{ position: 'relative' }} className="search-input">
+        <div style={{ position: 'relative' }} className="search-input" ref={searchRef}>
           <Search
             size={14}
             color="var(--text-muted)"
@@ -130,16 +235,49 @@ export default function Header({ title, subtitle, onMenuToggle }: HeaderProps) {
               top: '50%',
               transform: 'translateY(-50%)',
               pointerEvents: 'none',
+              zIndex: 1,
             }}
           />
+          {searchQuery && (
+            <button
+              onClick={clearSearch}
+              style={{
+                position: 'absolute',
+                right: '8px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                zIndex: 1,
+                width: '18px',
+                height: '18px',
+                border: 'none',
+                background: 'transparent',
+                borderRadius: '50%',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'background 150ms',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'var(--bg-subtle)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+              }}
+            >
+              <X size={12} color="var(--text-muted)" />
+            </button>
+          )}
           <input
             type="text"
-            placeholder="Search..."
+            placeholder="Search passports, boxes, slots..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             style={{
-              width: '180px',
+              width: '240px',
               height: '34px',
               paddingLeft: '32px',
-              paddingRight: '12px',
+              paddingRight: searchQuery ? '28px' : '12px',
               background: 'var(--bg-subtle)',
               border: '1px solid var(--border)',
               borderRadius: 'var(--radius)',
@@ -151,12 +289,107 @@ export default function Header({ title, subtitle, onMenuToggle }: HeaderProps) {
             onFocus={(e) => {
               e.target.style.background = 'var(--bg-surface)';
               e.target.style.borderColor = 'var(--brand)';
+              if (searchResults.length > 0) {
+                setShowResults(true);
+              }
             }}
             onBlur={(e) => {
               e.target.style.background = 'var(--bg-subtle)';
               e.target.style.borderColor = 'var(--border)';
             }}
           />
+
+          {/* Search Results Dropdown */}
+          {showResults && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 'calc(100% + 4px)',
+                right: 0,
+                width: '320px',
+                maxHeight: '400px',
+                overflowY: 'auto',
+                background: 'var(--bg-surface)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-lg)',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                zIndex: 1000,
+              }}
+            >
+              {isSearching ? (
+                <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
+                  Searching...
+                </div>
+              ) : searchResults.length === 0 ? (
+                <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
+                  {searchQuery.length < 2 ? 'Type at least 2 characters' : 'No results found'}
+                </div>
+              ) : (
+                <div style={{ padding: '8px' }}>
+                  {searchResults.map((result) => (
+                    <div
+                      key={`${result.type}-${result.id}`}
+                      onClick={() => handleResultClick(result)}
+                      style={{
+                        padding: '10px 12px',
+                        borderRadius: 'var(--radius)',
+                        cursor: 'pointer',
+                        transition: 'background 150ms',
+                        marginBottom: '4px',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'var(--bg-subtle)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div
+                          style={{
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: 'var(--radius)',
+                            background:
+                              result.type === 'passport'
+                                ? 'var(--success)'
+                                : result.type === 'box'
+                                ? 'var(--brand)'
+                                : 'var(--warning)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'white',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {result.type === 'passport' ? 'P' : result.type === 'box' ? 'B' : 'S'}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '2px' }}>
+                            {result.label}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: '11px',
+                              color: 'var(--text-muted)',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            }}
+                          >
+                            {result.subtitle}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Theme Toggle */}

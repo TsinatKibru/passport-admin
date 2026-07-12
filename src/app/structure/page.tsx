@@ -92,6 +92,7 @@ export default function StructurePage() {
   // Modal state
   const [modalType, setModalType] = useState<ModalType>(null);
   const [parentId, setParentId] = useState<string>('');
+  const [parentRow, setParentRow] = useState<Row | null>(null); // Store the full row object
   const [formData, setFormData] = useState({ name: '', qrCode: '', position: 1 });
   
   // Confirm delete state
@@ -110,7 +111,7 @@ export default function StructurePage() {
   // Bulk create state
   const [bulkSlotForm, setBulkSlotForm] = useState({
     namePattern: 'Slot {n}',
-    qrPattern: 'SLOT-{n}',
+    qrPattern: 'SLOT-{row}-{n}',  // Include {row} placeholder for row name
     startNumber: 1,
     endNumber: 10,
     positionStart: 1,
@@ -223,11 +224,13 @@ export default function StructurePage() {
   
   // Bulk create slots mutation
   const bulkCreateSlotsMutation = useMutation({
-    mutationFn: async ({ rowId, pattern }: { rowId: string; pattern: typeof bulkSlotForm }) => {
+    mutationFn: async ({ rowId, rowName, pattern }: { rowId: string; rowName: string; pattern: typeof bulkSlotForm }) => {
       const slots = [];
       for (let i = pattern.startNumber; i <= pattern.endNumber; i++) {
         const name = pattern.namePattern.replace('{n}', String(i));
-        const qrCode = pattern.qrPattern.replace('{n}', String(i));
+        let qrCode = pattern.qrPattern
+          .replace('{n}', String(i))
+          .replace('{row}', rowName); // Replace {row} with actual row name
         const position = pattern.positionStart + (i - pattern.startNumber);
         slots.push({ name, qrCode, position, rowId });
       }
@@ -256,7 +259,7 @@ export default function StructurePage() {
       setModalType(null);
       setBulkSlotForm({
         namePattern: 'Slot {n}',
-        qrPattern: 'SLOT-{n}',
+        qrPattern: 'SLOT-{row}-{n}',
         startNumber: 1,
         endNumber: 10,
         positionStart: 1,
@@ -411,8 +414,12 @@ export default function StructurePage() {
   };
   
   const handleBulkCreateSlots = () => {
-    if (!parentId) return;
-    bulkCreateSlotsMutation.mutate({ rowId: parentId, pattern: bulkSlotForm });
+    if (!parentId || !parentRow) return;
+    bulkCreateSlotsMutation.mutate({ 
+      rowId: parentId, 
+      rowName: parentRow.name, 
+      pattern: bulkSlotForm 
+    });
   };
   
   const handleBulkCreateRows = () => {
@@ -684,6 +691,7 @@ export default function StructurePage() {
                                         onClick={(e) => { 
                                           e.stopPropagation(); 
                                           setParentId(row.id);
+                                          setParentRow(row); // Store the full row object
                                           setModalType('bulk-create-slots');
                                         }}
                                         style={{
@@ -1085,10 +1093,11 @@ export default function StructurePage() {
               <Input
                 value={bulkSlotForm.qrPattern}
                 onChange={(e) => setBulkSlotForm({ ...bulkSlotForm, qrPattern: e.target.value })}
-                placeholder="SLOT-{n}"
+                placeholder="SLOT-{row}-{n}"
               />
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                Use {'{n}'} for number placeholder (e.g., "QR-SLOT-{'{n}'}" → QR-SLOT-1, QR-SLOT-2...)
+                Use {'{n}'} for number, {'{row}'} for row name (e.g., "SLOT-{'{row}'}-{'{n}'}" → SLOT-A-1, SLOT-A-2...)
+                {parentRow && <span style={{ color: 'var(--brand)', fontWeight: 500 }}> Current row: {parentRow.name}</span>}
               </div>
             </div>
 
@@ -1140,7 +1149,9 @@ export default function StructurePage() {
                 .filter(n => n <= bulkSlotForm.endNumber)
                 .map((n, idx) => {
                   const name = bulkSlotForm.namePattern.replace('{n}', String(n));
-                  const qr = bulkSlotForm.qrPattern.replace('{n}', String(n));
+                  const qr = bulkSlotForm.qrPattern
+                    .replace('{n}', String(n))
+                    .replace('{row}', parentRow?.name || 'ROW'); // Replace {row} with actual row name
                   const pos = bulkSlotForm.positionStart + idx;
                   return (
                     <div key={n} style={{ fontSize: '11px', marginBottom: '4px', display: 'flex', gap: '8px' }}>
