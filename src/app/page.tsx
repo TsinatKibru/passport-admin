@@ -14,12 +14,26 @@ import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '@
 import { Package, AlertCircle, CheckCircle, TrendingUp } from 'lucide-react';
 
 interface DashboardStats {
+  // Passport metrics
   totalPassports: number;
   inBox: number;
   issued: number;
+  
+  // Box metrics
   totalBoxes: number;
   occupiedBoxes: number;
+  activeBoxes: number;
   fullBoxes: number;
+  inactiveBoxes: number;
+  vacantBoxes: number;
+  
+  // Capacity metrics
+  totalCapacity: number;
+  totalOccupied: number;
+  totalVacant: number;
+  occupancyRate: number;
+  
+  // Structure metrics
   totalRooms: number;
 }
 
@@ -62,26 +76,12 @@ export default function Dashboard() {
     }
   }, [router]);
 
-  // Fetch dashboard stats (aggregated metrics from backend)
-  // Fallback: calculate from boxes data if stats endpoint not available
-  const { data: stats } = useQuery<DashboardStats>({
+  // Fetch dashboard stats from backend (no fallback - endpoint exists now)
+  const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ['dashboard', 'stats'],
     queryFn: async () => {
-      try {
-        const res = await apiClient.get('/dashboard/stats');
-        return res.data;
-      } catch (error) {
-        // Fallback: endpoint doesn't exist yet, return empty stats
-        return {
-          totalPassports: 0,
-          inBox: 0,
-          issued: 0,
-          totalBoxes: 0,
-          occupiedBoxes: 0,
-          fullBoxes: 0,
-          totalRooms: 0,
-        };
-      }
+      const res = await apiClient.get('/dashboard/stats');
+      return res.data;
     },
     refetchInterval: 5000,
   });
@@ -98,21 +98,21 @@ export default function Dashboard() {
 
   const boxes = boxesData?.data ?? [];
   
-  // Calculate metrics from boxes data (fallback if stats endpoint unavailable)
-  const totalBoxesFromData = boxesData?.total ?? 0;
-  const occupiedBoxesFromData = boxes.filter(b => b.occupiedCount > 0).length;
-  
-  const totalBoxes = stats?.totalBoxes || totalBoxesFromData;
-  const occupiedBoxes = stats?.occupiedBoxes || occupiedBoxesFromData;
-  const vacantBoxes = totalBoxes - occupiedBoxes;
-  
-  // Calculate occupancy rate
-  const totalCapacity = boxes.reduce((acc, b) => acc + b.capacity, 0);
-  const totalOccupied = boxes.reduce((acc, b) => acc + b.occupiedCount, 0);
-  const occupancyRate = totalCapacity > 0 ? ((totalOccupied / totalCapacity) * 100).toFixed(1) : '0.0';
+  // Use backend-provided stats (no frontend calculation)
+  const totalBoxes = stats?.totalBoxes ?? 0;
+  const occupiedBoxes = stats?.occupiedBoxes ?? 0;
+  const vacantBoxes = stats?.vacantBoxes ?? 0;
+  const occupancyRate = stats?.occupancyRate?.toFixed(1) ?? '0.0';
 
   return (
     <Shell title="Dashboard Overview" subtitle="Real-time tracking summary">
+      {/* Show loading state for stats */}
+      {statsLoading && (
+        <div style={{ marginBottom: '24px', color: 'var(--text-muted)', fontSize: '14px' }}>
+          Loading dashboard statistics...
+        </div>
+      )}
+
       {/* KPI Stats Row */}
       <div
         style={{
