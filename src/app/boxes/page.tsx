@@ -69,7 +69,7 @@ interface PaginatedResponse<T> {
   totalPages: number;
 }
 
-type ModalType = 'create' | 'move' | 'bulk-register' | null;
+type ModalType = 'create' | 'move' | 'bulk-register' | 'bulk-assign' | null;
 
 const LIMIT = 10;
 const SLOT_PICKER_LIMIT = 15;
@@ -86,6 +86,10 @@ export default function BoxesPage() {
   const [searchInput, setSearchInput] = useState('');
   const [liveSearch, setLiveSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ACTIVE' | 'FULL' | 'INACTIVE' | ''>('');
+  
+  // Multi-select for bulk assign
+  const [selectedBoxIds, setSelectedBoxIds] = useState<Set<string>>(new Set());
+  const [bulkAssignRoomFilter, setBulkAssignRoomFilter] = useState<string>('');
   
   // Create box form
   const [createForm, setCreateForm] = useState({ qrCode: '', label: '', capacity: '10' });
@@ -234,6 +238,36 @@ export default function BoxesPage() {
     },
   });
 
+  // Fetch rooms for bulk assign filter
+  const { data: rooms = [] } = useQuery<Array<{ id: string; name: string }>>({
+    queryKey: ['rooms'],
+    queryFn: async () => {
+      const res = await apiClient.get('/location/rooms');
+      return res.data;
+    },
+    enabled: modalType === 'bulk-assign',
+  });
+
+  // Bulk assign mutation
+  const bulkAssignMutation = useMutation({
+    mutationFn: async ({ boxIds, roomId }: { boxIds: string[]; roomId?: string }) => {
+      const res = await apiClient.post('/location/bulk-assign-boxes', { boxIds, roomId });
+      return res.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['boxes'] });
+      queryClient.invalidateQueries({ queryKey: ['slots'] });
+      setModalType(null);
+      setSelectedBoxIds(new Set());
+      setBulkAssignRoomFilter('');
+      toast.success(`${data.count} boxes assigned to slots successfully`);
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to bulk assign boxes';
+      toast.error(message, { duration: 6000 });
+    },
+  });
+
   // Bulk register boxes mutation
   const bulkRegisterBoxesMutation = useMutation({
     mutationFn: async (pattern: typeof bulkRegisterForm) => {
@@ -338,23 +372,62 @@ export default function BoxesPage() {
     bulkRegisterBoxesMutation.mutate(bulkRegisterForm);
   };
 
+  const toggleBoxSelection = (boxId: string) => {
+    const newSet = new Set(selectedBoxIds);
+    if (newSet.has(boxId)) {
+      newSet.delete(boxId);
+    } else {
+      newSet.add(boxId);
+    }
+    setSelectedBoxIds(newSet);
+  };
+
+  const handleBulkAssign = () => {
+    bulkAssignMutation.mutate({
+      boxIds: Array.from(selectedBoxIds),
+      roomId: bulkAssignRoomFilter || undefined,
+    });
+  };
+
   return (
     <Shell title="Movable Boxes" subtitle="Manage box inventory and assignments">
       <Card>
         <PageHeader
           title="All Movable Boxes"
-          subtitle={`${totalRecords} boxes in system`}
+          subtitle={selectedBoxIds.size > 0 ? `${selectedBoxIds.size} boxes selected` : `${totalRecords} boxes in system`}
           action={
             canCreate && (
               <div style={{ display: 'flex', gap: '8px' }}>
-                <Button onClick={() => setModalType('create')} variant="secondary" size="sm">
-                  <Plus size={14} />
-                  Add Box
-                </Button>
-                <Button onClick={() => setModalType('bulk-register')} variant="primary" size="sm">
-                  <Plus size={14} />
-                  Bulk Register
-                </Button>
+                {selectedBoxIds.size > 0 ? (
+                  <>
+                    <Button 
+                      onClick={() => setSelectedBoxIds(new Set())} 
+                      variant="secondary" 
+                      size="sm"
+                    >
+                      Clear Selection
+                    </Button>
+                    <Button 
+                      onClick={() => setModalType('bulk-assign')} 
+                      variant="primary" 
+                      size="sm"
+                    >
+                      <Package size={14} />
+                      Assign {selectedBoxIds.size} Boxes to Slots
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button onClick={() => setModalType('create')} variant="secondary" size="sm">
+                      <Plus size={14} />
+                      Add Box
+                    </Button>
+                    <Button onClick={() => setModalType('bulk-register')} variant="primary" size="sm">
+                      <Plus size={14} />
+                      Bulk Register
+                    </Button>
+                  </>
+                )}
               </div>
             )
           }
@@ -395,6 +468,22 @@ export default function BoxesPage() {
         <Table>
           <TableHead>
             <TableRow isHeader>
+              {canCreate && statusFilter === 'INACTIVE' && (
+                <TableHeader style={{ width: '40px' }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedBoxIds.size > 0 && selectedBoxIds.size === boxes.filter(b => b.status === 'INACTIVE').length}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedBoxIds(new Set(boxes.filter(b => b.status === 'INACTIVE').map(b => b.id)));
+                      } else {
+                        setSelectedBoxIds(new Set());
+                      }
+                    }}
+                    style={{ cursor: 'pointer' }}
+                  />
+                </TableHeader>
+              )}
               <TableHeader>Box ID</TableHeader>
               <TableHeader>Label</TableHeader>
               <TableHeader>Location</TableHeader>
@@ -425,6 +514,18 @@ export default function BoxesPage() {
 
               return (
                 <TableRow key={box.id}>
+                  {canCreate && statusFilter === 'INACTIVE' && (
+                    <TableCell>
+                      {box.status === 'INACTIVE' && (
+                        <input
+                          type="checkbox"
+                          checked={selectedBoxIds.has(box.id)}
+                          onChange={() => toggleBoxSelection(box.id)}
+                          style={{ cursor: 'pointer' }}
+                        />
+                      )}
+                    </TableCell>
+                  )}
                   <TableCell>
                     <span style={{ fontFamily: 'monospace', fontWeight: 600, color: 'var(--brand)' }}>
                       {box.qrCode}
@@ -973,6 +1074,114 @@ export default function BoxesPage() {
                   ? 'Registering...' 
                   : `Register ${Math.max(0, bulkRegisterForm.endNumber - bulkRegisterForm.startNumber + 1)} Boxes`}
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Assign Boxes to Slots Modal */}
+      {modalType === 'bulk-assign' && (
+        <div style={{ 
+          position: 'fixed', 
+          inset: 0, 
+          background: 'rgba(0, 0, 0, 0.5)', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div style={{ 
+            background: 'var(--bg-surface)', 
+            borderRadius: 'var(--radius)', 
+            width: '90%', 
+            maxWidth: '600px',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+            border: '1px solid var(--border)',
+          }}>
+            <div style={{ padding: '24px', borderBottom: '1px solid var(--border)' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: 600, margin: 0 }}>
+                Bulk Assign Boxes to Slots
+              </h2>
+              <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px', marginBottom: 0 }}>
+                Automatically assign {selectedBoxIds.size} selected boxes to available slots
+              </p>
+            </div>
+
+            <div style={{ padding: '24px' }}>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
+                  Filter by Room (Optional)
+                </label>
+                <select
+                  value={bulkAssignRoomFilter}
+                  onChange={(e) => setBulkAssignRoomFilter(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0 12px',
+                    height: '36px',
+                    fontSize: '13px',
+                    border: '1px solid var(--border)',
+                    borderRadius: 'var(--radius)',
+                    background: 'var(--bg-surface)',
+                    color: 'var(--text-primary)',
+                  }}
+                >
+                  <option value="">All Rooms (any available slot)</option>
+                  {rooms.map(room => (
+                    <option key={room.id} value={room.id}>{room.name}</option>
+                  ))}
+                </select>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                  Boxes will be assigned to the first available slots{bulkAssignRoomFilter && ' in the selected room'}
+                </div>
+              </div>
+
+              <div style={{ 
+                padding: '12px', 
+                background: 'var(--bg-subtle)', 
+                borderRadius: 'var(--radius)', 
+                marginBottom: '20px',
+              }}>
+                <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px' }}>
+                  SELECTED BOXES ({selectedBoxIds.size})
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {Array.from(selectedBoxIds).slice(0, 10).map(id => {
+                    const box = boxes.find(b => b.id === id);
+                    return box ? (
+                      <span key={id} style={{ 
+                        padding: '2px 8px', 
+                        background: 'var(--bg-surface)', 
+                        borderRadius: '4px',
+                        fontSize: '11px',
+                        fontFamily: 'monospace',
+                      }}>
+                        {box.label}
+                      </span>
+                    ) : null;
+                  })}
+                  {selectedBoxIds.size > 10 && (
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                      ... and {selectedBoxIds.size - 10} more
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                <Button variant="secondary" onClick={() => setModalType(null)}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={handleBulkAssign}
+                  disabled={bulkAssignMutation.isPending || selectedBoxIds.size === 0}
+                >
+                  {bulkAssignMutation.isPending 
+                    ? 'Assigning...' 
+                    : `Assign ${selectedBoxIds.size} Boxes`}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
