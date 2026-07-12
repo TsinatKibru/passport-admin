@@ -178,7 +178,7 @@ export default function ProfilePage() {
 
           <div style={{ padding: '24px' }}>
             {/* Avatar and Name */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '32px', paddingBottom: '24px', borderBottom: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px', marginBottom: '32px', paddingBottom: '24px', borderBottom: '1px solid var(--border)' }}>
               <div style={{
                 width: '80px',
                 height: '80px',
@@ -194,14 +194,16 @@ export default function ProfilePage() {
               }}>
                 {profile.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
               </div>
-              <div style={{ flex: 1 }}>
-                <h2 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h2 style={{ fontSize: '24px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '12px', lineHeight: 1.2 }}>
                   {profile.name}
                 </h2>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                   <Badge variant={profile.role === 'ADMIN' ? 'default' : 'info'}>
-                    <Shield size={12} style={{ marginRight: '4px' }} />
-                    {profile.role}
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <Shield size={12} />
+                      {profile.role}
+                    </span>
                   </Badge>
                   <Badge variant={profile.isActive ? 'success' : 'danger'}>
                     {profile.isActive ? 'Active' : 'Inactive'}

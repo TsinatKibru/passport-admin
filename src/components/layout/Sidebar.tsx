@@ -35,6 +35,7 @@ const navSections = [
     label: 'SETTINGS',
     items: [
       { icon: User, label: 'Profile', href: '/profile' },
+      { icon: Shield, label: 'Security', href: '/security' },
       { icon: Settings, label: 'Setup', href: '/setup' },
     ],
   },
