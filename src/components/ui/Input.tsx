@@ -5,6 +5,7 @@ export function Input({
   onChange,
   name,
   required,
+  disabled,
   style,
 }: {
   type?: string;
@@ -13,6 +14,7 @@ export function Input({
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   name?: string;
   required?: boolean;
+  disabled?: boolean;
   style?: React.CSSProperties;
 }) {
   return (
@@ -23,6 +25,7 @@ export function Input({
       onChange={onChange}
       name={name}
       required={required}
+      disabled={disabled}
       style={{
         width: '100%',
         height: '36px',
@@ -34,11 +37,15 @@ export function Input({
         color: 'var(--text-primary)',
         outline: 'none',
         transition: 'all 150ms',
+        opacity: disabled ? 0.6 : 1,
+        cursor: disabled ? 'not-allowed' : 'text',
         ...style,
       }}
       onFocus={(e) => {
-        e.target.style.borderColor = 'var(--brand)';
-        e.target.style.boxShadow = '0 0 0 3px rgb(37 99 235 / 0.1)';
+        if (!disabled) {
+          e.target.style.borderColor = 'var(--brand)';
+          e.target.style.boxShadow = '0 0 0 3px rgb(37 99 235 / 0.1)';
+        }
       }}
       onBlur={(e) => {
         e.target.style.borderColor = 'var(--border)';

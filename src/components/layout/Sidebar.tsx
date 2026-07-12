@@ -10,6 +10,7 @@ import {
   Settings,
   LogOut,
   Shield,
+  User,
   PanelLeftClose,
   PanelLeftOpen,
 } from 'lucide-react';
@@ -33,6 +34,7 @@ const navSections = [
   {
     label: 'SETTINGS',
     items: [
+      { icon: User, label: 'Profile', href: '/profile' },
       { icon: Settings, label: 'Setup', href: '/setup' },
     ],
   },
