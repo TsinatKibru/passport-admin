@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useRole } from '@/lib/auth/RoleContext';
+import { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   FileText,
@@ -56,6 +57,26 @@ export default function Sidebar({
   const pathname = usePathname();
   const router = useRouter();
   const { user: userProfile } = useRole();
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    // Check initial theme
+    const checkTheme = () => {
+      const theme = document.documentElement.getAttribute('data-theme');
+      setIsDark(theme === 'dark');
+    };
+    
+    checkTheme();
+    
+    // Watch for theme changes
+    const observer = new MutationObserver(checkTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+    
+    return () => observer.disconnect();
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('accessToken');
@@ -248,7 +269,12 @@ export default function Sidebar({
             alt="Branding decoration"
             width={200}
             height={180}
-            style={{ objectFit: 'contain', opacity: 0.8 }}
+            style={{ 
+              objectFit: 'contain', 
+              opacity: isDark ? 0.35 : 0.8,
+              mixBlendMode: isDark ? 'luminosity' : 'normal',
+              filter: isDark ? 'brightness(0.9) contrast(1.1)' : 'none',
+            }}
           />
         </div>
       )}
