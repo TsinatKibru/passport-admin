@@ -37,6 +37,7 @@ export function Button({
   onClick,
   disabled,
   type = 'button',
+  style,
 }: {
   children: React.ReactNode;
   variant?: keyof typeof variantStyles;
@@ -44,6 +45,7 @@ export function Button({
   onClick?: () => void;
   disabled?: boolean;
   type?: 'button' | 'submit';
+  style?: React.CSSProperties;
 }) {
   const variantStyle = variantStyles[variant];
   const sizeStyle = sizeStyles[size];
@@ -55,6 +57,10 @@ export function Button({
       disabled={disabled}
       style={{
         ...sizeStyle,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '6px',
         background: variantStyle.background,
         color: variantStyle.color,
         border: variantStyle.border,
@@ -64,6 +70,7 @@ export function Button({
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.5 : 1,
         transition: 'all 150ms',
+        ...style,
       }}
       onMouseEnter={(e) => {
         if (!disabled) {

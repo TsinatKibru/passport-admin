@@ -49,9 +49,11 @@ export function TableRow({
 export function TableHeader({
   children,
   align = 'left',
+  style,
 }: {
   children: React.ReactNode;
   align?: 'left' | 'right' | 'center';
+  style?: React.CSSProperties;
 }) {
   return (
     <th
@@ -63,6 +65,7 @@ export function TableHeader({
         letterSpacing: '0.06em',
         color: 'var(--text-muted)',
         textAlign: align,
+        ...style,
       }}
     >
       {children}
@@ -73,9 +76,11 @@ export function TableHeader({
 export function TableCell({
   children,
   align = 'left',
+  style,
 }: {
   children: React.ReactNode;
   align?: 'left' | 'right' | 'center';
+  style?: React.CSSProperties;
 }) {
   return (
     <td
@@ -84,6 +89,7 @@ export function TableCell({
         fontSize: '13px',
         color: 'var(--text-primary)',
         textAlign: align,
+        ...style,
       }}
     >
       {children}

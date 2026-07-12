@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
@@ -12,6 +12,16 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '@/components/ui/Table';
 import { Package, AlertCircle, CheckCircle, TrendingUp } from 'lucide-react';
+
+interface DashboardStats {
+  totalPassports: number;
+  inBox: number;
+  issued: number;
+  totalBoxes: number;
+  occupiedBoxes: number;
+  fullBoxes: number;
+  totalRooms: number;
+}
 
 interface Box {
   id: string;
@@ -30,10 +40,20 @@ interface Box {
       };
     };
   };
+  location: string | null;
+}
+
+interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 export default function Dashboard() {
   const router = useRouter();
+  const [searchInput, setSearchInput] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
@@ -42,19 +62,51 @@ export default function Dashboard() {
     }
   }, [router]);
 
-  const { data: boxes = [] } = useQuery<Box[]>({
-    queryKey: ['boxes'],
+  // Fetch dashboard stats (aggregated metrics from backend)
+  // Fallback: calculate from boxes data if stats endpoint not available
+  const { data: stats } = useQuery<DashboardStats>({
+    queryKey: ['dashboard', 'stats'],
     queryFn: async () => {
-      const res = await apiClient.get('/boxes');
-      return res.data.data || res.data;
+      try {
+        const res = await apiClient.get('/dashboard/stats');
+        return res.data;
+      } catch (error) {
+        // Fallback: endpoint doesn't exist yet, return empty stats
+        return {
+          totalPassports: 0,
+          inBox: 0,
+          issued: 0,
+          totalBoxes: 0,
+          occupiedBoxes: 0,
+          fullBoxes: 0,
+          totalRooms: 0,
+        };
+      }
     },
     refetchInterval: 5000,
   });
 
-  // Calculate metrics
-  const totalBoxes = boxes.length;
-  const occupiedBoxes = boxes.filter(b => b.occupiedCount > 0).length;
+  // Fetch recent boxes for preview table (paginated, limit 10)
+  const { data: boxesData } = useQuery<PaginatedResponse<Box>>({
+    queryKey: ['boxes', 'preview'],
+    queryFn: async () => {
+      const res = await apiClient.get('/boxes?page=1&limit=10');
+      return res.data;
+    },
+    refetchInterval: 5000,
+  });
+
+  const boxes = boxesData?.data ?? [];
+  
+  // Calculate metrics from boxes data (fallback if stats endpoint unavailable)
+  const totalBoxesFromData = boxesData?.total ?? 0;
+  const occupiedBoxesFromData = boxes.filter(b => b.occupiedCount > 0).length;
+  
+  const totalBoxes = stats?.totalBoxes || totalBoxesFromData;
+  const occupiedBoxes = stats?.occupiedBoxes || occupiedBoxesFromData;
   const vacantBoxes = totalBoxes - occupiedBoxes;
+  
+  // Calculate occupancy rate
   const totalCapacity = boxes.reduce((acc, b) => acc + b.capacity, 0);
   const totalOccupied = boxes.reduce((acc, b) => acc + b.occupiedCount, 0);
   const occupancyRate = totalCapacity > 0 ? ((totalOccupied / totalCapacity) * 100).toFixed(1) : '0.0';
@@ -103,32 +155,9 @@ export default function Dashboard() {
           action={<Button variant="secondary">Refresh</Button>}
         />
 
-        {/* Search Input */}
-        <div style={{ marginBottom: '16px' }}>
-          <input
-            type="text"
-            placeholder="Search Box ID or Location..."
-            style={{
-              width: '300px',
-              height: '36px',
-              padding: '0 12px',
-              background: 'var(--bg-subtle)',
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--radius)',
-              fontSize: '13px',
-              color: 'var(--text-primary)',
-              outline: 'none',
-              transition: 'all 150ms',
-            }}
-            onFocus={(e) => {
-              e.target.style.background = 'var(--bg-surface)';
-              e.target.style.borderColor = 'var(--brand)';
-            }}
-            onBlur={(e) => {
-              e.target.style.background = 'var(--bg-subtle)';
-              e.target.style.borderColor = 'var(--border)';
-            }}
-          />
+        {/* Info: Showing recent boxes preview */}
+        <div style={{ marginBottom: '16px', fontSize: '13px', color: 'var(--text-muted)' }}>
+          Showing most recent {boxes.length} boxes. <a href="/boxes" style={{ color: 'var(--brand)', textDecoration: 'none' }}>View all →</a>
         </div>
 
         <Table>
@@ -143,10 +172,8 @@ export default function Dashboard() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {boxes.slice(0, 10).map((box) => {
-              const location = box.slot
-                ? `${box.slot.row.shelf.room.name} / ${box.slot.row.shelf.name} / ${box.slot.row.name}`
-                : 'Unassigned';
+            {boxes.map((box) => {
+              const location = box.location || 'Unassigned';
               
               let statusVariant: 'success' | 'warning' | 'danger' = 'success';
               let statusLabel = 'ACTIVE';

@@ -5,6 +5,7 @@ export function Input({
   onChange,
   name,
   required,
+  style,
 }: {
   type?: string;
   placeholder?: string;
@@ -12,6 +13,7 @@ export function Input({
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   name?: string;
   required?: boolean;
+  style?: React.CSSProperties;
 }) {
   return (
     <input
@@ -32,6 +34,7 @@ export function Input({
         color: 'var(--text-primary)',
         outline: 'none',
         transition: 'all 150ms',
+        ...style,
       }}
       onFocus={(e) => {
         e.target.style.borderColor = 'var(--brand)';
