@@ -489,7 +489,6 @@ export default function BoxesPage() {
               <TableHeader>Location</TableHeader>
               <TableHeader align="center">Occupied</TableHeader>
               <TableHeader align="center">Capacity</TableHeader>
-              <TableHeader align="center">Utilization</TableHeader>
               <TableHeader align="right">Status</TableHeader>
               <TableHeader align="right">Actions</TableHeader>
             </TableRow>
@@ -544,9 +543,33 @@ export default function BoxesPage() {
                     )}
                   </TableCell>
                   <TableCell align="center">{box.occupiedCount}</TableCell>
-                  <TableCell align="center">{box.capacity}</TableCell>
                   <TableCell align="center">
-                    <span style={{ fontWeight: 600 }}>{utilization}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
+                      <span style={{ fontSize: '13px', minWidth: '20px', textAlign: 'right' }}>
+                        {box.capacity}
+                      </span>
+                      <div style={{
+                        flex: 1,
+                        height: '6px',
+                        borderRadius: '9999px',
+                        background: 'var(--border)',
+                        overflow: 'hidden',
+                        minWidth: '60px',
+                        maxWidth: '80px',
+                      }}>
+                        <div style={{
+                          height: '100%',
+                          borderRadius: '9999px',
+                          width: `${Math.round((box.occupiedCount / box.capacity) * 100)}%`,
+                          background: box.occupiedCount / box.capacity >= 0.9
+                            ? 'var(--danger)'
+                            : box.occupiedCount / box.capacity >= 0.5
+                            ? 'var(--warning)'
+                            : 'var(--brand)',
+                          transition: 'width 300ms ease',
+                        }} />
+                      </div>
+                    </div>
                   </TableCell>
                   <TableCell align="right">
                     <Badge variant={statusVariant}>{statusLabel}</Badge>
