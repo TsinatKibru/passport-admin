@@ -341,7 +341,6 @@ export default function Sidebar({
           display: 'flex',
           alignItems: 'center',
           gap: '10px',
-          cursor: 'pointer',
           boxShadow: 'var(--shadow-sm)',
         }}>
           <div style={{
@@ -367,7 +366,31 @@ export default function Sidebar({
               {userProfile?.role || 'ADMIN'}
             </div>
           </div>
-          <ChevronDown size={16} color="var(--text-muted)" />
+          <button
+            onClick={handleLogout}
+            style={{
+              width: '28px',
+              height: '28px',
+              border: 'none',
+              background: 'transparent',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 'var(--radius)',
+              flexShrink: 0,
+              transition: 'background 150ms',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--bg-subtle)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent';
+            }}
+            title="Logout"
+          >
+            <LogOut size={16} color="var(--text-muted)" />
+          </button>
         </div>
       )}
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { apiClient } from '@/lib/api/client';
 
 type Role = 'ADMIN' | 'STAFF';
@@ -33,10 +34,24 @@ export function RoleProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<Role | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const isPublicPath = pathname === '/login' || pathname === '/setup';
 
   const fetchUser = async () => {
-    const token = localStorage.getItem('accessToken');
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
     if (!token) {
+      setIsLoading(false);
+      setUser(null);
+      setRole(null);
+      if (!isPublicPath) {
+        router.push('/login');
+      }
+      return;
+    }
+
+    if (user) {
       setIsLoading(false);
       return;
     }
@@ -51,9 +66,14 @@ export function RoleProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Failed to fetch user profile:', error);
       // Clear invalid token
-      localStorage.removeItem('accessToken');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('accessToken');
+      }
       setUser(null);
       setRole(null);
+      if (!isPublicPath) {
+        router.push('/login');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -61,7 +81,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     fetchUser();
-  }, []);
+  }, [pathname]);
 
   const isAdmin = role === 'ADMIN';
   const isStaff = role === 'STAFF';
@@ -72,6 +92,43 @@ export function RoleProvider({ children }: { children: ReactNode }) {
   const canCreate = isAdmin;
   const canDelete = isAdmin;
   const canEditRoles = isAdmin;
+
+  if (isLoading && !isPublicPath) {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        background: '#FAFAFA',
+        color: '#1a1b22',
+        fontFamily: 'sans-serif'
+      }}>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          borderRadius: '50%',
+          border: '3px solid var(--border)',
+          borderTopColor: 'var(--brand)',
+          animation: 'spin 1s linear infinite',
+          marginBottom: '16px'
+        }} />
+        <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-secondary)' }}>
+          Loading PassportOS...
+        </span>
+        <style>{`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  if (!isLoading && !user && !isPublicPath) {
+    return null;
+  }
 
   return (
     <RoleContext.Provider
