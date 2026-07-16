@@ -4,6 +4,7 @@ import { Search, Bell, Moon, Sun, Menu, X } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api/client';
+import { useRole } from '@/lib/auth/RoleContext';
 
 interface HeaderProps {
   title: string;
@@ -21,6 +22,7 @@ interface SearchResult {
 
 export default function Header({ title, subtitle, onMenuToggle }: HeaderProps) {
   const router = useRouter();
+  const { user: userProfile } = useRole();
   const [hasNotification] = useState(true);
   const [isDark, setIsDark] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -470,7 +472,8 @@ export default function Header({ title, subtitle, onMenuToggle }: HeaderProps) {
         </button>
 
         {/* Avatar */}
-        <div
+        <button
+          onClick={() => router.push('/profile')}
           style={{
             width: '32px',
             height: '32px',
@@ -483,11 +486,23 @@ export default function Header({ title, subtitle, onMenuToggle }: HeaderProps) {
             fontSize: '12px',
             fontWeight: 600,
             cursor: 'pointer',
+            border: 'none',
+            padding: 0,
             flexShrink: 0,
+            transition: 'opacity 150ms',
           }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.opacity = '0.85';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.opacity = '1';
+          }}
+          title="View Profile"
         >
-          AD
-        </div>
+          {userProfile?.name
+            ? userProfile.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+            : 'AD'}
+        </button>
       </div>
     </header>
   );

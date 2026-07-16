@@ -39,7 +39,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
 
   const isPublicPath = pathname === '/login' || pathname === '/setup';
 
-  const fetchUser = async () => {
+  const fetchUser = async (force = false) => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
     if (!token) {
       setIsLoading(false);
@@ -51,7 +51,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    if (user) {
+    if (user && !force) {
       setIsLoading(false);
       return;
     }
@@ -141,7 +141,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
         canCreate,
         canDelete,
         canEditRoles,
-        refetch: fetchUser,
+        refetch: () => fetchUser(true),
       }}
     >
       {children}

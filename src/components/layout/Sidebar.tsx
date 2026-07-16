@@ -291,21 +291,31 @@ export default function Sidebar({
           justifyContent: 'center',
           gap: '8px',
         }}>
-          <div style={{
-            width: '32px',
-            height: '32px',
-            borderRadius: '50%',
-            background: 'var(--brand)',
-            color: 'var(--text-inverse)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '12px',
-            fontWeight: 600,
-            flexShrink: 0,
-          }}>
+          <button
+            onClick={() => {
+              router.push('/profile');
+              onNavigate?.();
+            }}
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              background: 'var(--brand)',
+              color: 'var(--text-inverse)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '12px',
+              fontWeight: 600,
+              flexShrink: 0,
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0,
+            }}
+            title="View Profile"
+          >
             {userProfile?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'AD'}
-          </div>
+          </button>
           <button
             onClick={handleLogout}
             style={{
@@ -332,17 +342,32 @@ export default function Sidebar({
           </button>
         </div>
       ) : (
-        <div style={{
-          margin: '8px 12px 16px 12px',
-          padding: '10px 12px',
-          border: '1px solid var(--border)',
-          borderRadius: 'var(--radius-lg)',
-          background: 'var(--bg-surface)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          boxShadow: 'var(--shadow-sm)',
-        }}>
+        <div 
+          onClick={() => {
+            router.push('/profile');
+            onNavigate?.();
+          }}
+          style={{
+            margin: '8px 12px 16px 12px',
+            padding: '10px 12px',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-lg)',
+            background: 'var(--bg-surface)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            boxShadow: 'var(--shadow-sm)',
+            cursor: 'pointer',
+            transition: 'background 150ms',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'var(--bg-subtle)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'var(--bg-surface)';
+          }}
+          title="View Profile"
+        >
           <div style={{
             width: '36px',
             height: '36px',
@@ -367,7 +392,10 @@ export default function Sidebar({
             </div>
           </div>
           <button
-            onClick={handleLogout}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleLogout();
+            }}
             style={{
               width: '28px',
               height: '28px',
@@ -382,7 +410,7 @@ export default function Sidebar({
               transition: 'background 150ms',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'var(--bg-subtle)';
+              e.currentTarget.style.background = 'var(--border)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'transparent';

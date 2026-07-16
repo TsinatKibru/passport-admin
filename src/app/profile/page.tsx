@@ -11,23 +11,16 @@ import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { User, Mail, Shield, Lock, AlertCircle, CheckCircle, Calendar } from 'lucide-react';
 import { apiClient } from '@/lib/api/client';
-
-interface UserProfile {
-  id: string;
-  email: string;
-  name: string;
-  role: 'ADMIN' | 'STAFF';
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+import { useRole } from '@/lib/auth/RoleContext';
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user: profile, isLoading: loading, refetch: refetchProfile } = useRole();
   const [changingPassword, setChangingPassword] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [isEditingDetails, setIsEditingDetails] = useState(false);
+  const [editForm, setEditForm] = useState({ name: '', email: '' });
+  const [savingDetails, setSavingDetails] = useState(false);
 
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
@@ -38,18 +31,28 @@ export default function ProfilePage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    fetchProfile();
-  }, []);
+    if (profile) {
+      setEditForm({ name: profile.name, email: profile.email });
+    }
+  }, [profile]);
 
-  const fetchProfile = async () => {
+  const handleSaveDetails = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!profile) return;
+    setSavingDetails(true);
+
     try {
-      const res = await apiClient.get('/auth/me');
-      setProfile(res.data);
-    } catch (error) {
-      toast.error('Failed to load profile');
-      router.push('/login');
+      await apiClient.put(`/auth/users/${profile.id}`, {
+        name: editForm.name,
+      });
+      toast.success('Profile details updated successfully');
+      await refetchProfile();
+      setIsEditingDetails(false);
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Failed to update profile details';
+      toast.error(message);
     } finally {
-      setLoading(false);
+      setSavingDetails(false);
     }
   };
 
@@ -174,6 +177,16 @@ export default function ProfilePage() {
           <PageHeader
             title="Profile Information"
             subtitle="View and manage your account details"
+            action={
+              profile.role === 'ADMIN' && !isEditingDetails && (
+                <Button variant="secondary" size="sm" onClick={() => {
+                  setEditForm({ name: profile.name, email: profile.email });
+                  setIsEditingDetails(true);
+                }}>
+                  Edit Details
+                </Button>
+              )
+            }
           />
 
           <div style={{ padding: '24px' }}>
@@ -213,41 +226,89 @@ export default function ProfilePage() {
             </div>
 
             {/* Details Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px' }}>
-              <div>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 500, color: 'var(--text-muted)', marginBottom: '8px' }}>
-                  <Mail size={14} />
-                  Email Address
-                </label>
-                <p style={{ fontSize: '15px', color: 'var(--text-primary)', fontWeight: 500 }}>
-                  {profile.email}
-                </p>
-              </div>
+            {isEditingDetails ? (
+              <form onSubmit={handleSaveDetails}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--text-primary)', marginBottom: '6px' }}>
+                      Full Name
+                    </label>
+                    <Input
+                      value={editForm.name}
+                      onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--text-muted)', marginBottom: '6px' }}>
+                      Email Address
+                    </label>
+                    <Input
+                      type="email"
+                      value={profile.email}
+                      disabled
+                      style={{ background: 'var(--bg-subtle)', color: 'var(--text-muted)', cursor: 'not-allowed' }}
+                    />
+                    <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                      Email address cannot be changed.
+                    </span>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setIsEditingDetails(false)}
+                    disabled={savingDetails}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    disabled={savingDetails}
+                  >
+                    {savingDetails ? 'Saving...' : 'Save Changes'}
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px' }}>
+                <div>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 500, color: 'var(--text-muted)', marginBottom: '8px' }}>
+                    <Mail size={14} />
+                    Email Address
+                  </label>
+                  <p style={{ fontSize: '15px', color: 'var(--text-primary)', fontWeight: 500 }}>
+                    {profile.email}
+                  </p>
+                </div>
 
-              <div>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 500, color: 'var(--text-muted)', marginBottom: '8px' }}>
-                  <User size={14} />
-                  User ID
-                </label>
-                <p style={{ fontSize: '11px', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
-                  {profile.id}
-                </p>
-              </div>
+                <div>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 500, color: 'var(--text-muted)', marginBottom: '8px' }}>
+                    <User size={14} />
+                    User ID
+                  </label>
+                  <p style={{ fontSize: '11px', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
+                    {profile.id}
+                  </p>
+                </div>
 
-              <div>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 500, color: 'var(--text-muted)', marginBottom: '8px' }}>
-                  <Calendar size={14} />
-                  Member Since
-                </label>
-                <p style={{ fontSize: '15px', color: 'var(--text-primary)' }}>
-                  {new Date(profile.createdAt).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </p>
+                <div>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 500, color: 'var(--text-muted)', marginBottom: '8px' }}>
+                    <Calendar size={14} />
+                    Member Since
+                  </label>
+                  <p style={{ fontSize: '15px', color: 'var(--text-primary)' }}>
+                    {new Date(profile.createdAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </Card>
         </div>
