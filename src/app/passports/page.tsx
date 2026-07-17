@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { apiClient } from '@/lib/api/client';
 import { useRole } from '@/lib/auth/RoleContext';
 import { Shell } from '@/components/layout/Shell';
+import { useTranslation } from '@/lib/contexts/LanguageContext';
 import { Card } from '@/components/ui/Card';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Badge } from '@/components/ui/Badge';
@@ -60,6 +61,7 @@ const LIMIT = 10;
 
 export default function PassportsPage() {
   const { canCreate, canDelete } = useRole();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   // Server-side pagination and filtering
@@ -322,16 +324,16 @@ export default function PassportsPage() {
   };
 
   return (
-    <Shell title="Passport Custody System" subtitle="Track and register national passports">
+    <Shell title={t('passports.custody_title', 'Passport Custody System')} subtitle={t('passports.custody_subtitle', 'Track and register national passports')}>
       <Card>
         <PageHeader
-          title="All Registered Passports"
-          subtitle={`${totalRecords} total passports in database`}
+          title={t('passports.all_title', 'All Registered Passports')}
+          subtitle={`${totalRecords} ${t('passports.custody_subtitle_count', 'total passports in database')}`}
           action={
             canCreate && (
               <Button onClick={() => setModalType('register')} variant="primary" size="sm">
                 <Plus size={14} />
-                Register Passport
+                {t('passports.add_passport', 'Register Passport')}
               </Button>
             )
           }
@@ -342,7 +344,7 @@ export default function PassportsPage() {
           <div style={{ flex: '1', minWidth: '200px', position: 'relative' }}>
             <Input
               type="text"
-              placeholder="Search by name, ID number, or QR Code..."
+              placeholder={t('passports.search_placeholder', 'Search by name, ID number, or QR Code...')}
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
             />
@@ -367,9 +369,9 @@ export default function PassportsPage() {
               minWidth: '150px',
             }}
           >
-            <option value="">All Statuses</option>
-            <option value="IN_BOX">In Box</option>
-            <option value="ISSUED">Issued</option>
+            <option value="">{t('passports.all_statuses', 'All Statuses')}</option>
+            <option value="IN_BOX">{t('passports.status_in_box', 'In Box')}</option>
+            <option value="ISSUED">{t('passports.status_issued', 'Issued')}</option>
           </select>
         </div>
 
@@ -390,7 +392,7 @@ export default function PassportsPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <CheckSquare size={18} />
               <span style={{ fontSize: '14px', fontWeight: 600 }}>
-                {selectedIds.size} Passport(s) Selected
+                {selectedIds.size} {t('passports.selected_count', 'Passport(s) Selected')}
               </span>
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
@@ -411,7 +413,7 @@ export default function PassportsPage() {
                 }}
               >
                 <FolderDown size={14} />
-                Batch Assign to Box
+                {t('passports.batch_assign', 'Batch Assign to Box')}
               </button>
               <button
                 onClick={() => setSelectedIds(new Set())}
@@ -426,7 +428,7 @@ export default function PassportsPage() {
                   fontWeight: 500,
                 }}
               >
-                Clear Selection
+                {t('passports.clear_selection', 'Clear Selection')}
               </button>
             </div>
           </div>
@@ -447,12 +449,12 @@ export default function PassportsPage() {
                   )}
                 </button>
               </TableHeader>
-              <TableHeader>QR Code</TableHeader>
-              <TableHeader>Holder Name</TableHeader>
-              <TableHeader>Holder ID No</TableHeader>
-              <TableHeader>Box Storage</TableHeader>
-              <TableHeader align="center">Status</TableHeader>
-              <TableHeader align="right">Actions</TableHeader>
+              <TableHeader>{t('passports.col_qr_code', 'QR Code')}</TableHeader>
+              <TableHeader>{t('passports.col_holder', 'Holder Name')}</TableHeader>
+              <TableHeader>{t('passports.col_holder_id', 'Holder ID No')}</TableHeader>
+              <TableHeader>{t('passports.col_box', 'Box Storage')}</TableHeader>
+              <TableHeader align="center">{t('passports.col_status', 'Status')}</TableHeader>
+              <TableHeader align="right">{t('passports.col_actions', 'Actions')}</TableHeader>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -497,7 +499,7 @@ export default function PassportsPage() {
                   </TableCell>
                   <TableCell align="center">
                     <Badge variant={isIssued ? 'warning' : 'success'}>
-                      {passport.status.replace('_', ' ')}
+                      {isIssued ? t('passports.status_issued', 'Issued') : t('passports.status_in_box', 'In Box')}
                     </Badge>
                   </TableCell>
                   <TableCell align="right">
@@ -520,7 +522,7 @@ export default function PassportsPage() {
                         }}
                       >
                         <ArrowRightLeft size={12} />
-                        {isIssued ? 'Return' : 'Move'}
+                        {isIssued ? t('passports.action_return', 'Return') : t('passports.action_move', 'Move')}
                       </button>
                       
                       {!isIssued && (
@@ -539,7 +541,7 @@ export default function PassportsPage() {
                           }}
                         >
                           <FolderUp size={12} />
-                          Issue
+                          {t('passports.action_issue', 'Issue')}
                         </button>
                       )}
                       
@@ -572,10 +574,10 @@ export default function PassportsPage() {
           <div style={{ textAlign: 'center', padding: '48px 24px', color: 'var(--text-muted)' }}>
             <Package size={48} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
             <p style={{ fontWeight: 600, marginBottom: '4px' }}>
-              {liveSearch || statusFilter ? 'No passports found' : 'No passports registered'}
+              {liveSearch || statusFilter ? t('passports.no_results', 'No passports found') : t('passports.no_records', 'No passports registered')}
             </p>
             <p style={{ fontSize: '13px' }}>
-              {liveSearch || statusFilter ? 'Try a different search or filter' : 'Register a new passport to begin tracking'}
+              {liveSearch || statusFilter ? t('passports.try_different', 'Try a different search or filter') : t('passports.register_to_begin', 'Register a new passport to begin tracking')}
             </p>
           </div>
         )}
@@ -597,10 +599,10 @@ export default function PassportsPage() {
               disabled={page === 1}
             >
               <ChevronLeft size={14} />
-              Prev
+              {t('passports.prev', 'Prev')}
             </Button>
             <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-              Page {page} of {totalPages} · {totalRecords} records
+              {t('passports.prev', 'Page')} {page} {t('passports.of', 'of')} {totalPages} · {totalRecords} {t('passports.records', 'records')}
             </span>
             <Button
               variant="secondary"
@@ -608,7 +610,7 @@ export default function PassportsPage() {
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
             >
-              Next
+              {t('passports.next', 'Next')}
               <ChevronRight size={14} />
             </Button>
           </div>
@@ -644,12 +646,12 @@ export default function PassportsPage() {
             }}
           >
             <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 600 }}>
-              Register New Passport
+              {t('passports.modal_register_title', 'Register New Passport')}
             </h3>
 
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
-                QR Code / Document Number *
+                {t('passports.field_qr', 'QR Code / Document Number *')}
               </label>
               <Input
                 value={registerForm.qrCode}
@@ -660,7 +662,7 @@ export default function PassportsPage() {
 
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
-                Holder Full Name *
+                {t('passports.field_name', 'Holder Full Name *')}
               </label>
               <Input
                 value={registerForm.holderName}
@@ -671,7 +673,7 @@ export default function PassportsPage() {
 
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
-                National / Document ID No *
+                {t('passports.field_id', 'National / Document ID No *')}
               </label>
               <Input
                 value={registerForm.holderIdNo}
@@ -682,14 +684,14 @@ export default function PassportsPage() {
 
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
               <Button variant="secondary" onClick={() => setModalType(null)}>
-                Cancel
+                {t('passports.cancel', 'Cancel')}
               </Button>
               <Button
                 variant="primary"
                 onClick={handleRegisterPassport}
                 disabled={createPassportMutation.isPending || !registerForm.qrCode || !registerForm.holderName || !registerForm.holderIdNo}
               >
-                {createPassportMutation.isPending ? 'Registering...' : 'Register'}
+                {createPassportMutation.isPending ? t('passports.registering', 'Registering...') : t('passports.register', 'Register')}
               </Button>
             </div>
           </div>
@@ -732,12 +734,12 @@ export default function PassportsPage() {
             }}
           >
             <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 600 }}>
-              {modalType === 'batch-assign' ? 'Batch Assign to Movable Box' : 'Assign Passport to Box'}
+              {modalType === 'batch-assign' ? t('passports.modal_batch_title', 'Batch Assign to Movable Box') : t('passports.modal_assign_title', 'Assign Passport to Box')}
             </h3>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px' }}>
               {modalType === 'batch-assign' 
-                ? `Assigning ${selectedIds.size} selected passports · ${boxTotal} boxes available`
-                : `Assigning passport belonging to ${selectedPassport?.holderName}`
+                ? `${t('passports.assigning', 'Assigning')} ${selectedIds.size} ${t('passports.selected_count_sub', 'selected passports')} · ${boxTotal} ${t('passports.boxes_avail', 'boxes available')}`
+                : `${t('passports.assigning', 'Assigning')} ${t('passports.passport_of', 'passport belonging to')} ${selectedPassport?.holderName}`
               }
             </p>
 
@@ -746,7 +748,7 @@ export default function PassportsPage() {
               <div style={{ flex: 1, position: 'relative' }}>
                 <Input
                   type="text"
-                  placeholder="Search by label or QR code..."
+                  placeholder={t('passports.search_box_placeholder', 'Search by label or QR code...')}
                   value={boxSearch}
                   onChange={(e) => {
                     setBoxSearch(e.target.value);
@@ -765,7 +767,7 @@ export default function PassportsPage() {
 
             {boxesLoading && (
               <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
-                Loading boxes...
+                {t('passports.loading_boxes', 'Loading boxes...')}
               </div>
             )}
 
@@ -773,9 +775,9 @@ export default function PassportsPage() {
               {!boxesLoading && availableBoxes.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
                   <Package size={48} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
-                  <p>No available boxes with sufficient vacant slots</p>
+                  <p>{t('passports.no_available_boxes', 'No available boxes with sufficient vacant slots')}</p>
                   <p style={{ fontSize: '12px', marginTop: '8px' }}>
-                    {modalType === 'batch-assign' && `Need boxes with at least ${selectedIds.size} vacant slots`}
+                    {modalType === 'batch-assign' && `${t('passports.need_boxes_with', 'Need boxes with at least')} ${selectedIds.size} ${t('passports.vacant_slots', 'vacant slots')}`}
                   </p>
                 </div>
               ) : (
@@ -823,7 +825,7 @@ export default function PassportsPage() {
                         color: targetBoxId === box.id ? 'var(--text-inverse)' : 'var(--text-secondary)', 
                         fontWeight: 500 
                       }}>
-                        {box.vacantCount} vacant
+                        {box.vacantCount} {t('passports.vacant_count', 'vacant')}
                       </div>
                     </div>
                   ))}
@@ -849,10 +851,10 @@ export default function PassportsPage() {
                   disabled={boxPage === 1}
                 >
                   <ChevronLeft size={14} />
-                  Prev
+                  {t('passports.prev', 'Prev')}
                 </Button>
                 <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                  Page {boxPage} of {boxTotalPages} · {boxTotal} boxes
+                  {t('passports.prev', 'Page')} {boxPage} {t('passports.of', 'of')} {boxTotalPages} · {boxTotal} {t('sidebar.boxes', 'boxes')}
                 </span>
                 <Button
                   variant="secondary"
@@ -860,7 +862,7 @@ export default function PassportsPage() {
                   onClick={() => setBoxPage(p => Math.min(boxTotalPages, p + 1))}
                   disabled={boxPage === boxTotalPages}
                 >
-                  Next
+                  {t('passports.next', 'Next')}
                   <ChevronRight size={14} />
                 </Button>
               </div>
@@ -874,14 +876,14 @@ export default function PassportsPage() {
                 setBoxPage(1); // Reset pagination
                 setBoxSearch(''); // Reset search
               }}>
-                Cancel
+                {t('passports.cancel', 'Cancel')}
               </Button>
               <Button
                 variant="primary"
                 disabled={!targetBoxId || assignPassportMutation.isPending || batchAssignMutation.isPending}
                 onClick={modalType === 'batch-assign' ? handleBatchAssign : handleAssignPassport}
               >
-                {assignPassportMutation.isPending || batchAssignMutation.isPending ? 'Assigning...' : 'Assign'}
+                {assignPassportMutation.isPending || batchAssignMutation.isPending ? t('passports.assigning', 'Assigning...') : t('passports.assign', 'Assign')}
               </Button>
             </div>
           </div>
@@ -893,9 +895,9 @@ export default function PassportsPage() {
         isOpen={confirmIssue.isOpen}
         onClose={() => setConfirmIssue({ isOpen: false, passport: null })}
         onConfirm={confirmIssueAction}
-        title="Issue Passport"
-        message={confirmIssue.passport ? `Issue passport belonging to ${confirmIssue.passport.holderName} to its owner?` : ''}
-        confirmText="Issue"
+        title={t('passports.modal_issue_title', 'Issue Passport')}
+        message={confirmIssue.passport ? `${t('passports.issue_msg_1', 'Issue passport belonging to')} ${confirmIssue.passport.holderName} ${t('passports.issue_msg_2', 'to its owner?')}` : ''}
+        confirmText={t('passports.action_issue', 'Issue')}
         variant="primary"
         isLoading={issuePassportMutation.isPending}
       />
@@ -905,9 +907,9 @@ export default function PassportsPage() {
         isOpen={confirmDelete.isOpen}
         onClose={() => setConfirmDelete({ isOpen: false, passport: null })}
         onConfirm={confirmDeleteAction}
-        title="Confirm Deletion"
-        message={confirmDelete.passport ? `Are you sure you want to delete passport belonging to ${confirmDelete.passport.holderName}? This action cannot be undone.` : ''}
-        confirmText="Delete"
+        title={t('passports.modal_delete_title', 'Confirm Deletion')}
+        message={confirmDelete.passport ? `${t('passports.delete_msg_1', 'Are you sure you want to delete passport belonging to')} ${confirmDelete.passport.holderName}? ${t('passports.delete_msg_2', 'This action cannot be undone.')}` : ''}
+        confirmText={t('passports.delete', 'Delete')}
         variant="danger"
         isLoading={deletePassportMutation.isPending}
       />

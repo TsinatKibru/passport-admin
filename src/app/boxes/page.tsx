@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { apiClient } from '@/lib/api/client';
 import { useRole } from '@/lib/auth/RoleContext';
 import { Shell } from '@/components/layout/Shell';
+import { useTranslation } from '@/lib/contexts/LanguageContext';
 import { Card } from '@/components/ui/Card';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Button } from '@/components/ui/Button';
@@ -76,6 +77,7 @@ const SLOT_PICKER_LIMIT = 15;
 
 export default function BoxesPage() {
   const { canCreate, canDelete } = useRole();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   
   const [modalType, setModalType] = useState<ModalType>(null);
@@ -390,11 +392,14 @@ export default function BoxesPage() {
   };
 
   return (
-    <Shell title="Movable Boxes" subtitle="Manage box inventory and assignments">
+    <Shell title={t('boxes.title', 'Movable Boxes')} subtitle={t('boxes.subtitle', 'Manage box inventory and assignments')}>
       <Card>
         <PageHeader
-          title="All Movable Boxes"
-          subtitle={selectedBoxIds.size > 0 ? `${selectedBoxIds.size} boxes selected` : `${totalRecords} boxes in system`}
+          title={t('boxes.all_title', 'All Movable Boxes')}
+          subtitle={selectedBoxIds.size > 0 
+            ? `${selectedBoxIds.size} ${t('boxes.selected_count', 'boxes selected')}` 
+            : `${totalRecords} ${t('boxes.total_count', 'boxes in system')}`
+          }
           action={
             canCreate && (
               <div style={{ display: 'flex', gap: '8px' }}>
@@ -405,7 +410,7 @@ export default function BoxesPage() {
                       variant="secondary" 
                       size="sm"
                     >
-                      Clear Selection
+                      {t('passports.clear_selection', 'Clear Selection')}
                     </Button>
                     <Button 
                       onClick={() => setModalType('bulk-assign')} 
@@ -413,18 +418,18 @@ export default function BoxesPage() {
                       size="sm"
                     >
                       <Package size={14} />
-                      Assign {selectedBoxIds.size} Boxes to Slots
+                      {t('boxes.assign', 'Assign')} {selectedBoxIds.size} {t('boxes.assign_to_slots', 'Boxes to Slots')}
                     </Button>
                   </>
                 ) : (
                   <>
                     <Button onClick={() => setModalType('create')} variant="secondary" size="sm">
                       <Plus size={14} />
-                      Add Box
+                      {t('boxes.add_box', 'Add Box')}
                     </Button>
                     <Button onClick={() => setModalType('bulk-register')} variant="primary" size="sm">
                       <Plus size={14} />
-                      Bulk Register
+                      {t('boxes.bulk_register', 'Bulk Register')}
                     </Button>
                   </>
                 )}
@@ -438,7 +443,7 @@ export default function BoxesPage() {
           <div style={{ flex: '1', minWidth: '200px' }}>
             <Input
               type="text"
-              placeholder="Search Box ID, Label..."
+              placeholder={t('boxes.search_placeholder', 'Search Box ID, Label...')}
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
             />
@@ -458,10 +463,10 @@ export default function BoxesPage() {
               minWidth: '150px',
             }}
           >
-            <option value="">All Status</option>
-            <option value="ACTIVE">Active</option>
-            <option value="FULL">Full</option>
-            <option value="INACTIVE">Inactive</option>
+            <option value="">{t('boxes.all_status', 'All Status')}</option>
+            <option value="ACTIVE">{t('boxes.status_active', 'Active')}</option>
+            <option value="FULL">{t('boxes.status_full', 'Full')}</option>
+            <option value="INACTIVE">{t('boxes.status_inactive', 'Inactive')}</option>
           </select>
         </div>
 
@@ -484,13 +489,13 @@ export default function BoxesPage() {
                   />
                 </TableHeader>
               )}
-              <TableHeader>Box ID</TableHeader>
-              <TableHeader>Label</TableHeader>
-              <TableHeader>Location</TableHeader>
-              <TableHeader align="center">Occupied</TableHeader>
-              <TableHeader align="center">Capacity</TableHeader>
-              <TableHeader align="right">Status</TableHeader>
-              <TableHeader align="right">Actions</TableHeader>
+              <TableHeader>{t('boxes.col_box_id', 'Box ID')}</TableHeader>
+              <TableHeader>{t('boxes.col_label', 'Label')}</TableHeader>
+              <TableHeader>{t('boxes.col_location', 'Location')}</TableHeader>
+              <TableHeader align="center">{t('boxes.col_occupied', 'Occupied')}</TableHeader>
+              <TableHeader align="center">{t('boxes.col_capacity', 'Capacity')}</TableHeader>
+              <TableHeader align="right">{t('boxes.col_status', 'Status')}</TableHeader>
+              <TableHeader align="right">{t('boxes.col_actions', 'Actions')}</TableHeader>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -501,7 +506,11 @@ export default function BoxesPage() {
 
               // Use backend status directly
               let statusVariant: 'success' | 'warning' | 'danger' = 'success';
-              let statusLabel = box.status;
+              let statusLabel = box.status === 'FULL' 
+                ? t('boxes.status_full', 'Full') 
+                : box.status === 'INACTIVE' 
+                  ? t('boxes.status_inactive', 'Inactive') 
+                  : t('boxes.status_active', 'Active');
 
               if (box.status === 'FULL') {
                 statusVariant = 'danger';
@@ -538,7 +547,7 @@ export default function BoxesPage() {
                       </span>
                     ) : (
                       <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                        Unassigned
+                        {t('boxes.unassigned', 'Unassigned')}
                       </span>
                     )}
                   </TableCell>
@@ -593,10 +602,10 @@ export default function BoxesPage() {
                             alignItems: 'center',
                             gap: '4px',
                           }}
-                          title="Move to slot"
+                          title={t('boxes.action_move_tooltip', 'Move to slot')}
                         >
                           <Move size={12} />
-                          Move
+                          {t('passports.action_move', 'Move')}
                         </button>
                       )}
                       {canDelete && (
@@ -614,7 +623,7 @@ export default function BoxesPage() {
                             alignItems: 'center',
                             gap: '4px',
                           }}
-                          title={box.occupiedCount > 0 ? 'Cannot delete occupied box' : 'Delete box'}
+                          title={box.occupiedCount > 0 ? t('boxes.cannot_delete_occupied', 'Cannot delete occupied box') : t('boxes.delete_box', 'Delete box')}
                         >
                           <Trash2 size={12} />
                         </button>
@@ -626,15 +635,14 @@ export default function BoxesPage() {
             })}
           </TableBody>
         </Table>
-
         {boxes.length === 0 && (
           <div style={{ textAlign: 'center', padding: '48px 24px', color: 'var(--text-muted)' }}>
             <Package size={48} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
             <p style={{ fontWeight: 600, marginBottom: '4px' }}>
-              {liveSearch || statusFilter ? 'No boxes found' : 'No boxes yet'}
+              {liveSearch || statusFilter ? t('boxes.no_results', 'No boxes found') : t('boxes.no_records', 'No boxes yet')}
             </p>
             <p style={{ fontSize: '13px' }}>
-              {liveSearch || statusFilter ? 'Try a different search or filter' : 'Start by adding a box to the system'}
+              {liveSearch || statusFilter ? t('boxes.try_different', 'Try a different search or filter') : t('boxes.add_to_begin', 'Start by adding a box to the system')}
             </p>
           </div>
         )}
@@ -656,10 +664,10 @@ export default function BoxesPage() {
               disabled={page === 1}
             >
               <ChevronLeft size={14} />
-              Prev
+              {t('passports.prev', 'Prev')}
             </Button>
             <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-              Page {page} of {totalPages} · {totalRecords} records
+              {t('passports.page', 'Page')} {page} {t('passports.of', 'of')} {totalPages} · {totalRecords} {t('passports.records', 'records')}
             </span>
             <Button
               variant="secondary"
@@ -667,7 +675,7 @@ export default function BoxesPage() {
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
             >
-              Next
+              {t('passports.next', 'Next')}
               <ChevronRight size={14} />
             </Button>
           </div>
@@ -703,12 +711,12 @@ export default function BoxesPage() {
             }}
           >
             <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 600 }}>
-              Add New Box
+              {t('boxes.modal_create_title', 'Add New Box')}
             </h3>
 
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
-                QR Code *
+                {t('boxes.field_qr', 'QR Code *')}
               </label>
               <Input
                 value={createForm.qrCode}
@@ -719,7 +727,7 @@ export default function BoxesPage() {
 
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
-                Label *
+                {t('boxes.field_label', 'Label *')}
               </label>
               <Input
                 value={createForm.label}
@@ -730,7 +738,7 @@ export default function BoxesPage() {
 
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
-                Capacity
+                {t('boxes.field_capacity', 'Capacity')}
               </label>
               <Input
                 type="number"
@@ -739,20 +747,20 @@ export default function BoxesPage() {
                 placeholder="10"
               />
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                Default capacity is 10 passports per box
+                {t('boxes.capacity_help', 'Default capacity is 10 passports per box')}
               </div>
             </div>
 
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
               <Button variant="secondary" onClick={() => setModalType(null)}>
-                Cancel
+                {t('passports.cancel', 'Cancel')}
               </Button>
               <Button
                 variant="primary"
                 onClick={handleCreateBox}
                 disabled={createBoxMutation.isPending || !createForm.qrCode || !createForm.label}
               >
-                {createBoxMutation.isPending ? 'Creating...' : 'Create Box'}
+                {createBoxMutation.isPending ? t('boxes.creating', 'Creating...') : t('boxes.create', 'Create Box')}
               </Button>
             </div>
           </div>
@@ -796,16 +804,16 @@ export default function BoxesPage() {
             }}
           >
             <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 600 }}>
-              Move Box: {selectedBox.label}
+              {t('boxes.modal_move_title', 'Move Box')}: {selectedBox.label}
             </h3>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-              Select a slot to assign this box ({slotTotalRecords} slots available)
+              {t('boxes.select_slot_help', 'Select a slot to assign this box')} ({slotTotalRecords} {t('boxes.slots_available', 'slots available')})
             </p>
 
             {/* Search Input */}
             <Input
               type="text"
-              placeholder="Search slot by name, room, or QR code..."
+              placeholder={t('boxes.search_slot_placeholder', 'Search slot by name, room, or QR code...')}
               value={slotSearchInput}
               onChange={(e) => setSlotSearchInput(e.target.value)}
             />
@@ -821,7 +829,7 @@ export default function BoxesPage() {
               {slots.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
                   <Square size={48} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
-                  <p>{slotSearchInput ? 'No slots found matching your search' : 'No slots configured'}</p>
+                  <p>{slotSearchInput ? t('boxes.no_slots_found', 'No slots found matching your search') : t('boxes.no_slots_configured', 'No slots configured')}</p>
                 </div>
               ) : (
                 slots.map((slot) => {
@@ -902,10 +910,10 @@ export default function BoxesPage() {
                   disabled={slotPage === 1}
                 >
                   <ChevronLeft size={14} />
-                  Prev
+                  {t('passports.prev', 'Prev')}
                 </Button>
                 <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                  Page {slotPage} of {slotTotalPages}
+                  {t('passports.page', 'Page')} {slotPage} {t('passports.of', 'of')} {slotTotalPages}
                 </span>
                 <Button
                   variant="secondary"
@@ -913,7 +921,7 @@ export default function BoxesPage() {
                   onClick={() => setSlotPage(p => Math.min(slotTotalPages, p + 1))}
                   disabled={slotPage === slotTotalPages}
                 >
-                  Next
+                  {t('passports.next', 'Next')}
                   <ChevronRight size={14} />
                 </Button>
               </div>
@@ -926,14 +934,14 @@ export default function BoxesPage() {
                 setSlotPage(1);
                 setSelectedSlotId('');
               }}>
-                Cancel
+                {t('passports.cancel', 'Cancel')}
               </Button>
               <Button
                 variant="primary"
                 onClick={handleMoveBox}
                 disabled={moveBoxMutation.isPending || !selectedSlotId}
               >
-                {moveBoxMutation.isPending ? 'Moving...' : 'Move Box'}
+                {moveBoxMutation.isPending ? t('boxes.moving', 'Moving...') : t('passports.action_move', 'Move')}
               </Button>
             </div>
           </div>
@@ -969,15 +977,15 @@ export default function BoxesPage() {
             }}
           >
             <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 600 }}>
-              Bulk Register Boxes
+              {t('boxes.modal_bulk_title', 'Bulk Register Boxes')}
             </h3>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>
-              Register multiple boxes at once with sequential labeling
+              {t('boxes.bulk_register_help', 'Register multiple boxes at once with sequential labeling')}
             </p>
 
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
-                Label Pattern
+                {t('boxes.field_label_pattern', 'Label Pattern')}
               </label>
               <Input
                 value={bulkRegisterForm.labelPattern}
@@ -985,13 +993,13 @@ export default function BoxesPage() {
                 placeholder="MB-{n:04d}"
               />
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                Use {'{n}'} for number. Add :04d for zero-padding (e.g., MB-{'{n:04d}'} → MB-0001, MB-0002)
+                {t('boxes.label_pattern_help', 'Use {n} for number. Add :04d for zero-padding (e.g., MB-{n:04d} → MB-0001, MB-0002)')}
               </div>
             </div>
 
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
-                QR Code Pattern
+                {t('boxes.field_qr_pattern', 'QR Code Pattern')}
               </label>
               <Input
                 value={bulkRegisterForm.qrPattern}
@@ -999,14 +1007,14 @@ export default function BoxesPage() {
                 placeholder="BOX-{n:04d}"
               />
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                QR codes must be globally unique. Use same pattern format as label.
+                {t('boxes.qr_pattern_help', 'QR codes must be globally unique. Use same pattern format as label.')}
               </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '16px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
-                  Start Number
+                  {t('boxes.field_start_number', 'Start Number')}
                 </label>
                 <Input
                   type="number"
@@ -1019,7 +1027,7 @@ export default function BoxesPage() {
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
-                  End Number
+                  {t('boxes.field_end_number', 'End Number')}
                 </label>
                 <Input
                   type="number"
@@ -1032,7 +1040,7 @@ export default function BoxesPage() {
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
-                  Capacity
+                  {t('boxes.field_capacity', 'Capacity')}
                 </label>
                 <Input
                   type="number"
@@ -1054,7 +1062,7 @@ export default function BoxesPage() {
               border: '1px solid var(--border)',
             }}>
               <div style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', color: 'var(--text-secondary)' }}>
-                Preview (first 3 of {bulkRegisterForm.endNumber - bulkRegisterForm.startNumber + 1} boxes):
+                {t('boxes.preview', 'Preview')} (first 3 of {bulkRegisterForm.endNumber - bulkRegisterForm.startNumber + 1} {t('boxes.boxes_count_suffix', 'boxes')}):
               </div>
               {[bulkRegisterForm.startNumber, bulkRegisterForm.startNumber + 1, bulkRegisterForm.startNumber + 2]
                 .filter(n => n <= bulkRegisterForm.endNumber)
@@ -1073,14 +1081,14 @@ export default function BoxesPage() {
                 })}
               {bulkRegisterForm.endNumber - bulkRegisterForm.startNumber > 2 && (
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                  ... and {bulkRegisterForm.endNumber - bulkRegisterForm.startNumber - 2} more
+                  ... {t('boxes.and', 'and')} {bulkRegisterForm.endNumber - bulkRegisterForm.startNumber - 2} {t('boxes.more', 'more')}
                 </div>
               )}
             </div>
 
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
               <Button variant="secondary" onClick={() => setModalType(null)}>
-                Cancel
+                {t('passports.cancel', 'Cancel')}
               </Button>
               <Button
                 variant="primary"
@@ -1094,8 +1102,8 @@ export default function BoxesPage() {
                 }
               >
                 {bulkRegisterBoxesMutation.isPending 
-                  ? 'Registering...' 
-                  : `Register ${Math.max(0, bulkRegisterForm.endNumber - bulkRegisterForm.startNumber + 1)} Boxes`}
+                  ? t('boxes.registering', 'Registering...') 
+                  : `${t('boxes.register', 'Register')} ${Math.max(0, bulkRegisterForm.endNumber - bulkRegisterForm.startNumber + 1)} ${t('boxes.boxes_count_suffix', 'Boxes')}`}
               </Button>
             </div>
           </div>
@@ -1123,17 +1131,17 @@ export default function BoxesPage() {
           }}>
             <div style={{ padding: '24px', borderBottom: '1px solid var(--border)' }}>
               <h2 style={{ fontSize: '18px', fontWeight: 600, margin: 0 }}>
-                Bulk Assign Boxes to Slots
+                {t('boxes.modal_bulk_assign_title', 'Bulk Assign Boxes to Slots')}
               </h2>
               <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px', marginBottom: 0 }}>
-                Automatically assign {selectedBoxIds.size} selected boxes to available slots
+                {t('boxes.bulk_assign_help', 'Automatically assign selected boxes to available slots')} ({selectedBoxIds.size} {t('boxes.selected_count', 'boxes selected')})
               </p>
             </div>
 
             <div style={{ padding: '24px' }}>
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
-                  Filter by Room (Optional)
+                  {t('boxes.field_room_filter', 'Filter by Room (Optional)')}
                 </label>
                 <select
                   value={bulkAssignRoomFilter}
@@ -1149,13 +1157,13 @@ export default function BoxesPage() {
                     color: 'var(--text-primary)',
                   }}
                 >
-                  <option value="">All Rooms (any available slot)</option>
+                  <option value="">{t('boxes.all_rooms', 'All Rooms (any available slot)')}</option>
                   {rooms.map(room => (
                     <option key={room.id} value={room.id}>{room.name}</option>
                   ))}
                 </select>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                  Boxes will be assigned to the first available slots{bulkAssignRoomFilter && ' in the selected room'}
+                  {t('boxes.assign_slots_help', 'Boxes will be assigned to the first available slots')}{bulkAssignRoomFilter && ` ${t('boxes.in_room', 'in the selected room')}`}
                 </div>
               </div>
 
@@ -1166,7 +1174,7 @@ export default function BoxesPage() {
                 marginBottom: '20px',
               }}>
                 <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px' }}>
-                  SELECTED BOXES ({selectedBoxIds.size})
+                  {t('boxes.selected_boxes_heading', 'SELECTED BOXES')} ({selectedBoxIds.size})
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   {Array.from(selectedBoxIds).slice(0, 10).map(id => {
@@ -1185,7 +1193,7 @@ export default function BoxesPage() {
                   })}
                   {selectedBoxIds.size > 10 && (
                     <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                      ... and {selectedBoxIds.size - 10} more
+                      ... {t('boxes.and', 'and')} {selectedBoxIds.size - 10} {t('boxes.more', 'more')}
                     </span>
                   )}
                 </div>
@@ -1193,7 +1201,7 @@ export default function BoxesPage() {
 
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                 <Button variant="secondary" onClick={() => setModalType(null)}>
-                  Cancel
+                  {t('passports.cancel', 'Cancel')}
                 </Button>
                 <Button
                   variant="primary"
@@ -1201,8 +1209,8 @@ export default function BoxesPage() {
                   disabled={bulkAssignMutation.isPending || selectedBoxIds.size === 0}
                 >
                   {bulkAssignMutation.isPending 
-                    ? 'Assigning...' 
-                    : `Assign ${selectedBoxIds.size} Boxes`}
+                    ? t('boxes.assigning', 'Assigning...') 
+                    : `${t('boxes.assign', 'Assign')} ${selectedBoxIds.size} ${t('boxes.boxes_count_suffix', 'Boxes')}`}
                 </Button>
               </div>
             </div>
@@ -1215,9 +1223,9 @@ export default function BoxesPage() {
         isOpen={confirmDelete.isOpen}
         onClose={() => setConfirmDelete({ isOpen: false, box: null })}
         onConfirm={confirmDeleteAction}
-        title="Confirm Deletion"
-        message={confirmDelete.box ? `Are you sure you want to delete box ${confirmDelete.box.label}? This action cannot be undone.` : ''}
-        confirmText="Delete"
+        title={t('passports.modal_delete_title', 'Confirm Deletion')}
+        message={confirmDelete.box ? `${t('boxes.delete_confirm_msg', 'Are you sure you want to delete box')} ${confirmDelete.box.label}? ${t('passports.delete_msg_2', 'This action cannot be undone.')}` : ''}
+        confirmText={t('passports.delete', 'Delete')}
         variant="danger"
         isLoading={deleteBoxMutation.isPending}
       />

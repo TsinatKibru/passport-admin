@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
 import { Clock, ChevronLeft, ChevronRight, Search, SlidersHorizontal, Calendar } from 'lucide-react';
+import { useTranslation } from '@/lib/contexts/LanguageContext';
 
 interface LogEntry {
   id: string;
@@ -34,6 +35,7 @@ interface PaginatedResponse<T> {
 const LIMIT = 20;
 
 export default function LogsPage() {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [action, setAction] = useState('');
@@ -72,37 +74,37 @@ export default function LogsPage() {
   const getActionLabel = (action: string) => {
     switch (action) {
       case 'PASSPORT_ASSIGNED':
-        return 'Passport Placed';
+        return t('logs.passport_assigned', 'Passport Placed');
       case 'PASSPORT_RETURNED':
-        return 'Returned to Vault';
+        return t('logs.passport_returned', 'Returned to Vault');
       case 'PASSPORT_ISSUED':
-        return 'Issued to Owner';
+        return t('logs.passport_issued', 'Issued to Owner');
       case 'BOX_MOVED':
-        return 'Box Relocated';
+        return t('logs.box_moved', 'Box Relocated');
       case 'ROOM_CREATED':
-        return 'Room Created';
+        return t('logs.room_created', 'Room Created');
       case 'ROOM_UPDATED':
-        return 'Room Updated';
+        return t('logs.room_updated', 'Room Updated');
       case 'ROOM_DELETED':
-        return 'Room Deleted';
+        return t('logs.room_deleted', 'Room Deleted');
       case 'SHELF_CREATED':
-        return 'Shelf Created';
+        return t('logs.shelf_created', 'Shelf Created');
       case 'SHELF_UPDATED':
-        return 'Shelf Updated';
+        return t('logs.shelf_updated', 'Shelf Updated');
       case 'SHELF_DELETED':
-        return 'Shelf Deleted';
+        return t('logs.shelf_deleted', 'Shelf Deleted');
       case 'ROW_CREATED':
-        return 'Row Created';
+        return t('logs.row_created', 'Row Created');
       case 'ROW_UPDATED':
-        return 'Row Updated';
+        return t('logs.row_updated', 'Row Updated');
       case 'ROW_DELETED':
-        return 'Row Deleted';
+        return t('logs.row_deleted', 'Row Deleted');
       case 'SLOT_CREATED':
-        return 'Slot Created';
+        return t('logs.slot_created', 'Slot Created');
       case 'SLOT_UPDATED':
-        return 'Slot Updated';
+        return t('logs.slot_updated', 'Slot Updated');
       case 'SLOT_DELETED':
-        return 'Slot Deleted';
+        return t('logs.slot_deleted', 'Slot Deleted');
       default:
         return action;
     }
@@ -128,12 +130,12 @@ export default function LogsPage() {
   };
 
   return (
-    <Shell title="Audit Logs" subtitle="Real-time movement ledger and system operation logs">
+    <Shell title={t('logs.title', 'Audit Logs')} subtitle={t('logs.subtitle', 'Real-time movement ledger and system operation logs')}>
       <Card>
         <div style={{ padding: '24px', borderBottom: '1px solid var(--border)' }}>
           <PageHeader
-            title="Activity Timeline"
-            subtitle={`${totalRecords} log entries found`}
+            title={t('logs.activity_timeline', 'Activity Timeline')}
+            subtitle={`${totalRecords} ${t('logs.entries_found', 'log entries found')}`}
           />
         </div>
 
@@ -149,10 +151,10 @@ export default function LogsPage() {
           <div>
             <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>
               <Search size={14} />
-              TEXT SEARCH
+              {t('logs.text_search', 'TEXT SEARCH')}
             </label>
             <Input
-              placeholder="Search holder, QR, box, staff..."
+              placeholder={t('logs.search_placeholder', 'Search holder, QR, box, staff...')}
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -164,7 +166,7 @@ export default function LogsPage() {
           <div>
             <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>
               <SlidersHorizontal size={14} />
-              ACTION TYPE
+              {t('logs.action_type', 'ACTION TYPE')}
             </label>
             <select
               value={action}
@@ -185,26 +187,26 @@ export default function LogsPage() {
                 transition: 'border-color 150ms',
               }}
             >
-              <option value="">All Actions</option>
-              <optgroup label="Physical Movements">
-                <option value="PASSPORT_ASSIGNED">Passport Placed (Assigned)</option>
-                <option value="PASSPORT_RETURNED">Returned to Vault</option>
-                <option value="PASSPORT_ISSUED">Issued to Owner</option>
-                <option value="BOX_MOVED">Box Relocated (Moved)</option>
+              <option value="">{t('logs.all_actions', 'All Actions')}</option>
+              <optgroup label={t('logs.physical_movements', 'Physical Movements')}>
+                <option value="PASSPORT_ASSIGNED">{t('logs.passport_assigned', 'Passport Placed')} ({t('passports.assign', 'Assigned')})</option>
+                <option value="PASSPORT_RETURNED">{t('logs.passport_returned', 'Returned to Vault')}</option>
+                <option value="PASSPORT_ISSUED">{t('logs.passport_issued', 'Issued to Owner')}</option>
+                <option value="BOX_MOVED">{t('logs.box_moved', 'Box Relocated')} ({t('passports.action_move', 'Moved')})</option>
               </optgroup>
-              <optgroup label="Configuration Changes">
-                <option value="ROOM_CREATED">Room Created</option>
-                <option value="ROOM_UPDATED">Room Updated</option>
-                <option value="ROOM_DELETED">Room Deleted</option>
-                <option value="SHELF_CREATED">Shelf Created</option>
-                <option value="SHELF_UPDATED">Shelf Updated</option>
-                <option value="SHELF_DELETED">Shelf Deleted</option>
-                <option value="ROW_CREATED">Row Created</option>
-                <option value="ROW_UPDATED">Row Updated</option>
-                <option value="ROW_DELETED">Row Deleted</option>
-                <option value="SLOT_CREATED">Slot Created</option>
-                <option value="SLOT_UPDATED">Slot Updated</option>
-                <option value="SLOT_DELETED">Slot Deleted</option>
+              <optgroup label={t('logs.config_changes', 'Configuration Changes')}>
+                <option value="ROOM_CREATED">{t('logs.room_created', 'Room Created')}</option>
+                <option value="ROOM_UPDATED">{t('logs.room_updated', 'Room Updated')}</option>
+                <option value="ROOM_DELETED">{t('logs.room_deleted', 'Room Deleted')}</option>
+                <option value="SHELF_CREATED">{t('logs.shelf_created', 'Shelf Created')}</option>
+                <option value="SHELF_UPDATED">{t('logs.shelf_updated', 'Shelf Updated')}</option>
+                <option value="SHELF_DELETED">{t('logs.shelf_deleted', 'Shelf Deleted')}</option>
+                <option value="ROW_CREATED">{t('logs.row_created', 'Row Created')}</option>
+                <option value="ROW_UPDATED">{t('logs.row_updated', 'Row Updated')}</option>
+                <option value="ROW_DELETED">{t('logs.row_deleted', 'Row Deleted')}</option>
+                <option value="SLOT_CREATED">{t('logs.slot_created', 'Slot Created')}</option>
+                <option value="SLOT_UPDATED">{t('logs.slot_updated', 'Slot Updated')}</option>
+                <option value="SLOT_DELETED">{t('logs.slot_deleted', 'Slot Deleted')}</option>
               </optgroup>
             </select>
           </div>
@@ -212,7 +214,7 @@ export default function LogsPage() {
           <div>
             <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>
               <Calendar size={14} />
-              START DATE
+              {t('logs.start_date', 'START DATE')}
             </label>
             <Input
               type="date"
@@ -227,7 +229,7 @@ export default function LogsPage() {
           <div>
             <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>
               <Calendar size={14} />
-              END DATE
+              {t('logs.end_date', 'END DATE')}
             </label>
             <Input
               type="date"
@@ -246,7 +248,7 @@ export default function LogsPage() {
               style={{ width: '100%', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
               disabled={!search && !action && !startDate && !endDate}
             >
-              Clear Filters
+              {t('logs.clear_filters', 'Clear Filters')}
             </Button>
           </div>
         </div>
@@ -255,7 +257,7 @@ export default function LogsPage() {
           {/* Timeline Feed */}
           {isLoading ? (
             <div style={{ textAlign: 'center', padding: '48px 24px', color: 'var(--text-muted)' }}>
-              <p>Loading audit ledger...</p>
+              <p>{t('logs.loading', 'Loading audit ledger...')}</p>
             </div>
           ) : (
             <div style={{ position: 'relative' }}>
@@ -357,11 +359,11 @@ export default function LogsPage() {
                         >
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px' }}>
                             <div>
-                              <span style={{ color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>Passport QR Code</span>
+                              <span style={{ color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>{t('logs.passport_qr', 'Passport QR Code')}</span>
                               <span style={{ fontFamily: 'monospace', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{log.passport.qrCode}</span>
                             </div>
                             <div>
-                              <span style={{ color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>Holder Name</span>
+                              <span style={{ color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>{t('logs.holder_name', 'Holder Name')}</span>
                               <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-primary)' }}>{log.passport.holderName}</span>
                             </div>
                           </div>
@@ -370,13 +372,13 @@ export default function LogsPage() {
                             <div style={{ marginTop: '12px', paddingTop: '8px', borderTop: '1px dashed var(--border)', fontSize: '12px', display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
                               {log.fromLocation && (
                                 <div>
-                                  <span style={{ color: 'var(--text-muted)' }}>From: </span>
+                                  <span style={{ color: 'var(--text-muted)' }}>{t('logs.from', 'From:')} </span>
                                   <span style={{ fontWeight: 500, color: 'var(--text-secondary)' }}>{log.fromLocation}</span>
                                 </div>
                               )}
                               {log.toLocation && (
                                 <div>
-                                  <span style={{ color: 'var(--text-muted)' }}>To: </span>
+                                  <span style={{ color: 'var(--text-muted)' }}>{t('logs.to', 'To:')} </span>
                                   <span style={{ fontWeight: 500, color: 'var(--text-secondary)' }}>{log.toLocation}</span>
                                 </div>
                               )}
@@ -399,11 +401,11 @@ export default function LogsPage() {
                         >
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px' }}>
                             <div>
-                              <span style={{ color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>Box Label</span>
+                              <span style={{ color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>{t('boxes.col_label', 'Box Label')}</span>
                               <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{log.box.label}</span>
                             </div>
                             <div>
-                              <span style={{ color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>Box QR Code</span>
+                              <span style={{ color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>{t('logs.box_qr', 'Box QR Code')}</span>
                               <span style={{ fontFamily: 'monospace', fontSize: '13px', color: 'var(--text-primary)' }}>{log.box.qrCode}</span>
                             </div>
                           </div>
@@ -411,13 +413,13 @@ export default function LogsPage() {
                             <div style={{ marginTop: '12px', paddingTop: '8px', borderTop: '1px dashed var(--border)', fontSize: '12px', display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
                               {log.fromLocation && (
                                 <div>
-                                  <span style={{ color: 'var(--text-muted)' }}>From: </span>
+                                  <span style={{ color: 'var(--text-muted)' }}>{t('logs.from', 'From:')} </span>
                                   <span style={{ fontWeight: 500, color: 'var(--text-secondary)' }}>{log.fromLocation}</span>
                                 </div>
                               )}
                               {log.toLocation && (
                                 <div>
-                                  <span style={{ color: 'var(--text-muted)' }}>To: </span>
+                                  <span style={{ color: 'var(--text-muted)' }}>{t('logs.to', 'To:')} </span>
                                   <span style={{ fontWeight: 500, color: 'var(--text-secondary)' }}>{log.toLocation}</span>
                                 </div>
                               )}
@@ -447,13 +449,13 @@ export default function LogsPage() {
                             <div style={{ fontSize: '12px', display: 'flex', flexWrap: 'wrap', gap: '16px', color: 'var(--text-muted)' }}>
                               {log.fromLocation && (
                                 <div>
-                                  <span>Original: </span>
+                                  <span>{t('logs.original', 'Original:')} </span>
                                   <span style={{ fontWeight: 500, color: 'var(--text-secondary)' }}>{log.fromLocation}</span>
                                 </div>
                               )}
                               {log.toLocation && (
                                 <div>
-                                  <span>Current: </span>
+                                  <span>{t('logs.current', 'Current:')} </span>
                                   <span style={{ fontWeight: 500, color: 'var(--text-secondary)' }}>{log.toLocation}</span>
                                 </div>
                               )}
@@ -464,7 +466,7 @@ export default function LogsPage() {
 
                       {/* Operator Info */}
                       <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <span>Performed by:</span>
+                        <span>{t('logs.performed_by', 'Performed by:')}</span>
                         <strong style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>{log.user.name}</strong>
                         <span>({log.user.email})</span>
                       </div>
@@ -482,8 +484,8 @@ export default function LogsPage() {
                   }}
                 >
                   <Clock size={48} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
-                  <p style={{ fontWeight: 600, marginBottom: '4px' }}>No Activity Found</p>
-                  <p style={{ fontSize: '13px' }}>Try adjusting your search criteria or date filters.</p>
+                  <p style={{ fontWeight: 600, marginBottom: '4px' }}>{t('logs.no_activity', 'No Activity Found')}</p>
+                  <p style={{ fontSize: '13px' }}>{t('logs.try_adjusting', 'Try adjusting your search criteria or date filters.')}</p>
                 </div>
               )}
             </div>
@@ -506,10 +508,10 @@ export default function LogsPage() {
                 disabled={page === 1}
               >
                 <ChevronLeft size={14} />
-                Prev
+                {t('passports.prev', 'Prev')}
               </Button>
               <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                Page {page} of {totalPages} · {totalRecords} records
+                {t('passports.prev', 'Page')} {page} {t('passports.of', 'of')} {totalPages} · {totalRecords} {t('passports.records', 'records')}
               </span>
               <Button
                 variant="secondary"
@@ -517,7 +519,7 @@ export default function LogsPage() {
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
               >
-                Next
+                {t('passports.next', 'Next')}
                 <ChevronRight size={14} />
               </Button>
             </div>

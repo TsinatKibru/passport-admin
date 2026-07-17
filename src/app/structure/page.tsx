@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { apiClient } from '@/lib/api/client';
 import { useRole } from '@/lib/auth/RoleContext';
+import { useTranslation } from '@/lib/contexts/LanguageContext';
 import { Shell } from '@/components/layout/Shell';
 import { Card } from '@/components/ui/Card';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -89,6 +90,7 @@ type ModalType = 'room' | 'shelf' | 'row' | 'slot' | 'assign-box' | 'bulk-create
 
 export default function StructurePage() {
   const { canCreate, canDelete } = useRole();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   
   // Expanded state
@@ -505,18 +507,18 @@ export default function StructurePage() {
   };
 
   return (
-    <Shell title="Physical Structure" subtitle="Storage facility hierarchy management">
+    <Shell title={t('structure.title', 'Physical Structure Layout')} subtitle={t('structure.subtitle', 'Configure rooms, shelves, rows and slots')}>
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
         {/* Left: Expandable Tree */}
         <Card>
           <PageHeader
-            title="Storage Facility Hierarchy"
-            subtitle="Central Repository System (CRS-01)"
+            title={t('structure.hierarchy', 'Storage Facility Hierarchy')}
+            subtitle={t('structure.central_repo', 'Central Repository System (CRS-01)')}
             action={
               canCreate && (
                 <Button onClick={() => openCreateModal('room')} size="sm">
                   <Plus size={14} />
-                  Add Room
+                  {t('structure.add_room', 'Add Room')}
                 </Button>
               )
             }
@@ -525,8 +527,8 @@ export default function StructurePage() {
           {rooms.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '48px 24px', color: 'var(--text-muted)' }}>
               <Folder size={48} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
-              <p style={{ fontWeight: 600, marginBottom: '4px' }}>No Rooms Configured</p>
-              <p style={{ fontSize: '13px' }}>Start by adding a room to the system.</p>
+              <p style={{ fontWeight: 600, marginBottom: '4px' }}>{t('structure.no_rooms', 'No Rooms Configured')}</p>
+              <p style={{ fontSize: '13px' }}>{t('structure.add_room_to_begin', 'Start by adding a room to the system.')}</p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -593,7 +595,7 @@ export default function StructurePage() {
                               justifyContent: 'center',
                               marginRight: '2px',
                             }}
-                            title="Edit Room"
+                            title={t('structure.edit_room', 'Edit Room')}
                           >
                             <Edit size={14} />
                           </button>
@@ -610,7 +612,7 @@ export default function StructurePage() {
                               alignItems: 'center',
                               justifyContent: 'center',
                             }}
-                            title="Add Shelf"
+                            title={t('structure.add_shelf', 'Add Shelf')}
                           >
                             <Plus size={12} />
                           </button>
@@ -631,7 +633,7 @@ export default function StructurePage() {
                             alignItems: 'center',
                             justifyContent: 'center',
                           }}
-                          title={shelvesCount > 0 ? "Cannot delete Room: it still contains Shelves. Delete shelves first." : "Delete Room"}
+                          title={shelvesCount > 0 ? t('structure.cannot_delete_room', 'Cannot delete Room: it still contains Shelves. Delete shelves first.') : t('structure.delete_room', 'Delete Room')}
                         >
                           <Trash2 size={14} />
                         </button>
@@ -695,7 +697,7 @@ export default function StructurePage() {
                                     justifyContent: 'center',
                                     marginRight: '2px',
                                   }}
-                                  title="Edit Shelf"
+                                  title={t('structure.edit_shelf', 'Edit Shelf')}
                                 >
                                   <Edit size={12} />
                                 </button>
@@ -712,7 +714,7 @@ export default function StructurePage() {
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                   }}
-                                  title="Add single row"
+                                  title={t('structure.add_row', 'Add Row')}
                                 >
                                   <Plus size={10} />
                                 </button>
@@ -735,10 +737,10 @@ export default function StructurePage() {
                                     gap: '2px',
                                     fontWeight: 600,
                                   }}
-                                  title="Bulk create rows (A-Z)"
+                                  title={t('structure.bulk_create_rows', 'Bulk Create Rows')}
                                 >
                                   <Plus size={8} />
-                                  Bulk
+                                  {t('structure.bulk_rows_btn', 'Bulk')}
                                 </button>
                               </>
                             )}
@@ -757,7 +759,7 @@ export default function StructurePage() {
                                   alignItems: 'center',
                                   justifyContent: 'center',
                                 }}
-                                title={rowsCount > 0 ? "Cannot delete Shelf: it still contains Rows. Delete rows first." : "Delete Shelf"}
+                                title={rowsCount > 0 ? t('structure.cannot_delete_shelf', 'Cannot delete Shelf: it still contains Rows. Delete rows first.') : t('structure.delete_shelf', 'Delete Shelf')}
                               >
                                 <Trash2 size={12} />
                               </button>
@@ -821,7 +823,7 @@ export default function StructurePage() {
                                           justifyContent: 'center',
                                           marginRight: '2px',
                                         }}
-                                        title="Edit Row"
+                                        title={t('structure.edit_row', 'Edit Row')}
                                       >
                                         <Edit size={11} />
                                       </button>
@@ -838,7 +840,7 @@ export default function StructurePage() {
                                           alignItems: 'center',
                                           justifyContent: 'center',
                                         }}
-                                        title="Add single slot"
+                                        title={t('structure.add_slot', 'Add Slot')}
                                       >
                                         <Plus size={9} />
                                       </button>
@@ -862,10 +864,10 @@ export default function StructurePage() {
                                           gap: '2px',
                                           fontWeight: 600,
                                         }}
-                                        title="Bulk create slots (1-N)"
+                                        title={t('structure.bulk_create_slots', 'Bulk Create Slots')}
                                       >
                                         <Plus size={7} />
-                                        Bulk
+                                        {t('structure.bulk_slots_btn', 'Bulk')}
                                       </button>
                                     </>
                                   )}
@@ -884,7 +886,7 @@ export default function StructurePage() {
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                       }}
-                                      title={slotsCount > 0 ? "Cannot delete Row: it still contains Slots. Delete slots first." : "Delete Row"}
+                                      title={slotsCount > 0 ? t('structure.cannot_delete_row', 'Cannot delete Row: it still contains Slots. Delete slots first.') : t('structure.delete_row', 'Delete Row')}
                                     >
                                       <Trash2 size={11} />
                                     </button>
@@ -937,7 +939,7 @@ export default function StructurePage() {
                                           justifyContent: 'center',
                                           marginRight: '2px',
                                         }}
-                                        title="Edit Slot"
+                                        title={t('structure.edit_slot', 'Edit Slot')}
                                       >
                                         <Edit size={10} />
                                       </button>
@@ -957,7 +959,7 @@ export default function StructurePage() {
                                           alignItems: 'center',
                                           justifyContent: 'center',
                                         }}
-                                        title={slot.boxes && slot.boxes.length > 0 ? `Cannot delete Slot: it still contains box(es): ${slot.boxes.map((b: any) => b.label).join(', ')}. Move boxes first.` : "Delete Slot"}
+                                        title={slot.boxes && slot.boxes.length > 0 ? t('structure.cannot_delete_slot', 'Cannot delete Slot: it still contains Box(es). Move boxes first.') : t('structure.delete_slot', 'Delete Slot')}
                                       >
                                         <Trash2 size={10} />
                                       </button>
@@ -979,14 +981,18 @@ export default function StructurePage() {
 
         {/* Right: Detail Panel */}
         <Card>
-          <PageHeader title={selectedEntity ? `${selectedEntity.type.charAt(0).toUpperCase() + selectedEntity.type.slice(1)} Details` : "Details"} />
+          <PageHeader 
+            title={selectedEntity 
+              ? t(`structure.${selectedEntity.type}_details`, `${selectedEntity.type.charAt(0).toUpperCase() + selectedEntity.type.slice(1)} Details`) 
+              : t('structure.details', 'Details')} 
+          />
           {selectedEntity ? (
             <div style={{ padding: '16px' }}>
               {selectedEntity.type === 'slot' && (
                 <>
                   <div style={{ marginBottom: '16px' }}>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                      LOCATION PATH
+                      {t('structure.location_path', 'LOCATION PATH')}
                     </div>
                     <div style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: 500 }}>
                       {selectedEntity.data.row?.shelf?.room?.name} / {selectedEntity.data.row?.shelf?.name} / {selectedEntity.data.row?.name} / {selectedEntity.data.name}
@@ -995,7 +1001,7 @@ export default function StructurePage() {
 
                   <div style={{ marginBottom: '16px' }}>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                      QR CODE
+                      {t('structure.qr_code', 'QR CODE')}
                     </div>
                     <div style={{ fontSize: '13px', fontFamily: 'monospace', color: 'var(--brand)' }}>
                       {selectedEntity.data.qrCode}
@@ -1004,7 +1010,7 @@ export default function StructurePage() {
 
                   <div style={{ marginBottom: '20px' }}>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                      STATUS
+                      {t('structure.status', 'STATUS')}
                     </div>
                     {(() => {
                       const boxes = selectedEntity.data.boxes || [];
@@ -1013,14 +1019,14 @@ export default function StructurePage() {
                       if (hasBox) {
                         return (
                           <div>
-                            <Badge variant="warning">Occupied</Badge>
+                            <Badge variant="warning">{t('structure.occupied', 'Occupied')}</Badge>
                             <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
                               {boxes.map((box: any) => box.label).join(', ')}
                             </div>
                           </div>
                         );
                       }
-                      return <Badge variant="success">Available</Badge>;
+                      return <Badge variant="success">{t('structure.available', 'Available')}</Badge>;
                     })()}
                   </div>
 
@@ -1028,7 +1034,7 @@ export default function StructurePage() {
                     <div style={{ width: '100%' }}>
                       <Button onClick={() => openCreateModal('assign-box')} variant="primary">
                         <Package size={14} />
-                        Assign Box to Slot
+                        {t('structure.assign_box_to_slot', 'Assign Box to Slot')}
                       </Button>
                     </div>
                   )}
@@ -1039,7 +1045,7 @@ export default function StructurePage() {
                 <>
                   <div style={{ marginBottom: '16px' }}>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                      ROOM NAME
+                      {t('structure.room_name', 'ROOM NAME')}
                     </div>
                     <div style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600 }}>
                       {selectedEntity.data.name}
@@ -1048,7 +1054,7 @@ export default function StructurePage() {
 
                   <div style={{ marginBottom: '16px' }}>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                      QR CODE
+                      {t('structure.qr_code', 'QR CODE')}
                     </div>
                     <div style={{ fontSize: '13px', fontFamily: 'monospace', color: 'var(--brand)' }}>
                       {selectedEntity.data.qrCode}
@@ -1057,16 +1063,16 @@ export default function StructurePage() {
 
                   <div style={{ marginBottom: '16px' }}>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                      STRUCTURE DETAILS
+                      {t('structure.structure_details', 'STRUCTURE DETAILS')}
                     </div>
                     <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                      Contains <strong>{selectedEntity.data._count?.shelves ?? allShelves.filter((s: any) => s.roomId === selectedEntity.data.id).length}</strong> shelves
+                      {t('structure.details_shelves', 'Contains {count} shelves').replace('{count}', String(selectedEntity.data._count?.shelves ?? allShelves.filter((s: any) => s.roomId === selectedEntity.data.id).length))}
                     </div>
                   </div>
 
                   <div style={{ marginBottom: '16px' }}>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                      CREATED AT
+                      {t('structure.created_at', 'CREATED AT')}
                     </div>
                     <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                       {new Date(selectedEntity.data.createdAt).toLocaleString()}
@@ -1079,7 +1085,7 @@ export default function StructurePage() {
                 <>
                   <div style={{ marginBottom: '16px' }}>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                      SHELF NAME
+                      {t('structure.shelf_name', 'SHELF NAME')}
                     </div>
                     <div style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600 }}>
                       {selectedEntity.data.name}
@@ -1088,7 +1094,7 @@ export default function StructurePage() {
 
                   <div style={{ marginBottom: '16px' }}>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                      PARENT ROOM
+                      {t('structure.parent_room', 'PARENT ROOM')}
                     </div>
                     <div style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: 500 }}>
                       {selectedEntity.data.room?.name || 'Unknown Room'}
@@ -1097,7 +1103,7 @@ export default function StructurePage() {
 
                   <div style={{ marginBottom: '16px' }}>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                      QR CODE
+                      {t('structure.qr_code', 'QR CODE')}
                     </div>
                     <div style={{ fontSize: '13px', fontFamily: 'monospace', color: 'var(--brand)' }}>
                       {selectedEntity.data.qrCode}
@@ -1106,7 +1112,7 @@ export default function StructurePage() {
 
                   <div style={{ marginBottom: '16px' }}>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                      POSITION
+                      {t('structure.position', 'POSITION')}
                     </div>
                     <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
                       {selectedEntity.data.position}
@@ -1115,10 +1121,10 @@ export default function StructurePage() {
 
                   <div style={{ marginBottom: '16px' }}>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                      STRUCTURE DETAILS
+                      {t('structure.structure_details', 'STRUCTURE DETAILS')}
                     </div>
                     <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                      Contains <strong>{selectedEntity.data._count?.rows ?? allRows.filter((r: any) => r.shelfId === selectedEntity.data.id).length}</strong> rows
+                      {t('structure.details_rows', 'Contains {count} rows').replace('{count}', String(selectedEntity.data._count?.rows ?? allRows.filter((r: any) => r.shelfId === selectedEntity.data.id).length))}
                     </div>
                   </div>
                 </>
@@ -1128,7 +1134,7 @@ export default function StructurePage() {
                 <>
                   <div style={{ marginBottom: '16px' }}>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                      ROW NAME
+                      {t('structure.row_name', 'ROW NAME')}
                     </div>
                     <div style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600 }}>
                       {selectedEntity.data.name}
@@ -1137,7 +1143,7 @@ export default function StructurePage() {
 
                   <div style={{ marginBottom: '16px' }}>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                      PARENT SHELF
+                      {t('structure.parent_shelf', 'PARENT SHELF')}
                     </div>
                     <div style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: 500 }}>
                       {selectedEntity.data.shelf?.room?.name} / {selectedEntity.data.shelf?.name}
@@ -1146,7 +1152,7 @@ export default function StructurePage() {
 
                   <div style={{ marginBottom: '16px' }}>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                      QR CODE
+                      {t('structure.qr_code', 'QR CODE')}
                     </div>
                     <div style={{ fontSize: '13px', fontFamily: 'monospace', color: 'var(--brand)' }}>
                       {selectedEntity.data.qrCode}
@@ -1155,7 +1161,7 @@ export default function StructurePage() {
 
                   <div style={{ marginBottom: '16px' }}>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                      POSITION
+                      {t('structure.position', 'POSITION')}
                     </div>
                     <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
                       {selectedEntity.data.position}
@@ -1164,10 +1170,10 @@ export default function StructurePage() {
 
                   <div style={{ marginBottom: '16px' }}>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                      STRUCTURE DETAILS
+                      {t('structure.structure_details', 'STRUCTURE DETAILS')}
                     </div>
                     <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                      Contains <strong>{selectedEntity.data._count?.slots ?? allSlots.filter((s: any) => s.rowId === selectedEntity.data.id).length}</strong> slots
+                      {t('structure.details_slots', 'Contains {count} slots').replace('{count}', String(selectedEntity.data._count?.slots ?? allSlots.filter((s: any) => s.rowId === selectedEntity.data.id).length))}
                     </div>
                   </div>
                 </>
@@ -1176,7 +1182,7 @@ export default function StructurePage() {
           ) : (
             <div style={{ textAlign: 'center', padding: '48px 24px', color: 'var(--text-muted)' }}>
               <Square size={48} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
-              <p style={{ fontSize: '13px' }}>Select an item in the structure tree to view details</p>
+              <p style={{ fontSize: '13px' }}>{t('structure.select_item_to_view', 'Select an item in the structure tree to view details')}</p>
             </div>
           )}
         </Card>
@@ -1211,12 +1217,14 @@ export default function StructurePage() {
             }}
           >
             <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 600 }}>
-              {isEditing ? 'Edit' : 'Add'} {modalType?.charAt(0).toUpperCase() + modalType?.slice(1)}
+              {isEditing 
+                ? t(`structure.edit_${modalType}`, `Edit ${modalType}`) 
+                : t(`structure.add_${modalType}`, `Add ${modalType}`)}
             </h3>
 
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
-                Name
+                {t('structure.name', 'Name')}
               </label>
               <Input
                 value={formData.name}
@@ -1227,7 +1235,7 @@ export default function StructurePage() {
 
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
-                QR Code
+                {t('structure.qr_code', 'QR Code')}
               </label>
               <Input
                 value={formData.qrCode}
@@ -1239,7 +1247,7 @@ export default function StructurePage() {
             {modalType !== 'room' && (
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
-                  Position
+                  {t('structure.position_label', 'Position')}
                 </label>
                 <Input
                   type="number"
@@ -1251,7 +1259,7 @@ export default function StructurePage() {
 
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
               <Button variant="secondary" onClick={() => setModalType(null)}>
-                Cancel
+                {t('structure.cancel', 'Cancel')}
               </Button>
               <Button
                 variant="primary"
@@ -1259,8 +1267,8 @@ export default function StructurePage() {
                 disabled={(isEditing ? updateMutation.isPending : createMutation.isPending) || !formData.name || !formData.qrCode}
               >
                 {isEditing 
-                  ? (updateMutation.isPending ? 'Saving...' : 'Save') 
-                  : (createMutation.isPending ? 'Creating...' : 'Create')}
+                  ? (updateMutation.isPending ? t('structure.saving', 'Saving...') : t('structure.save', 'Save')) 
+                  : (createMutation.isPending ? t('structure.creating', 'Creating...') : t('structure.add', 'Create'))}
               </Button>
             </div>
           </div>
@@ -1298,7 +1306,7 @@ export default function StructurePage() {
             }}
           >
             <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 600 }}>
-              Assign Box to Slot
+              {t('structure.assign_box_to_slot', 'Assign Box to Slot')}
             </h3>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '16px' }}>
               {selectedSlot.row.shelf.room.name} / {selectedSlot.row.shelf.name} / {selectedSlot.row.name} / {selectedSlot.name}
@@ -1307,7 +1315,7 @@ export default function StructurePage() {
             {availableBoxes.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
                 <Package size={48} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
-                <p>No available boxes</p>
+                <p>{t('structure.no_boxes_available', 'No available boxes')}</p>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
@@ -1354,7 +1362,7 @@ export default function StructurePage() {
 
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
               <Button variant="secondary" onClick={() => setModalType(null)}>
-                Cancel
+                {t('structure.cancel', 'Cancel')}
               </Button>
             </div>
           </div>
@@ -1390,15 +1398,15 @@ export default function StructurePage() {
             }}
           >
             <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 600 }}>
-              Bulk Create Slots
+              {t('structure.bulk_create_slots', 'Bulk Create Slots')}
             </h3>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>
-              Create multiple slots at once with sequential naming
+              {t('structure.bulk_create_slots_help', 'Create multiple slots at once with sequential naming')}
             </p>
 
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
-                Name Pattern
+                {t('structure.name_pattern', 'Name Pattern')}
               </label>
               <Input
                 value={bulkSlotForm.namePattern}
@@ -1406,13 +1414,13 @@ export default function StructurePage() {
                 placeholder="Slot {n}"
               />
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                Use {'{n}'} for number placeholder (e.g., "Slot {'{n}'}" → Slot 1, Slot 2...)
+                {t('structure.use_n_placeholder', 'Use {n} for number placeholder (e.g., "Slot {n}" → Slot 1, Slot 2...)')}
               </div>
             </div>
 
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
-                QR Code Pattern
+                {t('structure.qr_pattern', 'QR Code Pattern')}
               </label>
               <Input
                 value={bulkSlotForm.qrPattern}
@@ -1420,15 +1428,15 @@ export default function StructurePage() {
                 placeholder="SLOT-{row}-{n}"
               />
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                Use {'{n}'} for number, {'{row}'} for row name (e.g., "SLOT-{'{row}'}-{'{n}'}" → SLOT-A-1, SLOT-A-2...)
-                {parentRow && <span style={{ color: 'var(--brand)', fontWeight: 500 }}> Current row: {parentRow.name}</span>}
+                {t('structure.use_qr_placeholder', 'Use {n} for number, {row} for row name (e.g., "SLOT-{row}-{n}" → SLOT-A-1, SLOT-A-2...)')}
+                {parentRow && <span style={{ color: 'var(--brand)', fontWeight: 500 }}> {t('structure.current_row', 'Current row:')} {parentRow.name}</span>}
               </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '16px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
-                  Start Number
+                  {t('structure.start_number', 'Start Number')}
                 </label>
                 <Input
                   type="number"
@@ -1438,7 +1446,7 @@ export default function StructurePage() {
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
-                  End Number
+                  {t('structure.end_number', 'End Number')}
                 </label>
                 <Input
                   type="number"
@@ -1448,7 +1456,7 @@ export default function StructurePage() {
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
-                  Position Start
+                  {t('structure.position_start', 'Position Start')}
                 </label>
                 <Input
                   type="number"
@@ -1467,7 +1475,7 @@ export default function StructurePage() {
               border: '1px solid var(--border)',
             }}>
               <div style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', color: 'var(--text-secondary)' }}>
-                Preview (first 3 of {bulkSlotForm.endNumber - bulkSlotForm.startNumber + 1} slots):
+                {t('structure.preview_slots_title', 'Preview (first 3 of {total} slots):').replace('{total}', String(bulkSlotForm.endNumber - bulkSlotForm.startNumber + 1))}
               </div>
               {[bulkSlotForm.startNumber, bulkSlotForm.startNumber + 1, bulkSlotForm.startNumber + 2]
                 .filter(n => n <= bulkSlotForm.endNumber)
@@ -1488,14 +1496,14 @@ export default function StructurePage() {
                 })}
               {bulkSlotForm.endNumber - bulkSlotForm.startNumber > 2 && (
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                  ... and {bulkSlotForm.endNumber - bulkSlotForm.startNumber - 2} more
+                  {t('structure.and_more', '... and {count} more').replace('{count}', String(bulkSlotForm.endNumber - bulkSlotForm.startNumber - 2))}
                 </div>
               )}
             </div>
 
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
               <Button variant="secondary" onClick={() => setModalType(null)}>
-                Cancel
+                {t('structure.cancel', 'Cancel')}
               </Button>
               <Button
                 variant="primary"
@@ -1503,8 +1511,8 @@ export default function StructurePage() {
                 disabled={bulkCreateSlotsMutation.isPending || !bulkSlotForm.namePattern || !bulkSlotForm.qrPattern || bulkSlotForm.endNumber < bulkSlotForm.startNumber}
               >
                 {bulkCreateSlotsMutation.isPending 
-                  ? 'Creating...' 
-                  : `Create ${bulkSlotForm.endNumber - bulkSlotForm.startNumber + 1} Slots`}
+                  ? t('structure.creating', 'Creating...') 
+                  : t('structure.create_slots_btn', 'Create {count} Slots').replace('{count}', String(bulkSlotForm.endNumber - bulkSlotForm.startNumber + 1))}
               </Button>
             </div>
           </div>
@@ -1540,15 +1548,15 @@ export default function StructurePage() {
             }}
           >
             <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 600 }}>
-              Bulk Create Rows
+              {t('structure.bulk_create_rows', 'Bulk Create Rows')}
             </h3>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>
-              Create multiple rows at once with letter sequence (A-Z)
+              {t('structure.bulk_create_rows_help', 'Create multiple rows at once with letter sequence (A-Z)')}
             </p>
 
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
-                Name Pattern
+                {t('structure.name_pattern', 'Name Pattern')}
               </label>
               <Input
                 value={bulkRowForm.namePattern}
@@ -1556,13 +1564,13 @@ export default function StructurePage() {
                 placeholder="Row {letter}"
               />
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                Use {'{letter}'} for letter placeholder (e.g., "Row {'{letter}'}" → Row A, Row B...)
+                {t('structure.use_letter_placeholder', 'Use {letter} for letter placeholder (e.g., "Row {letter}" → Row A, Row B...)')}
               </div>
             </div>
 
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
-                QR Code Pattern
+                {t('structure.qr_pattern', 'QR Code Pattern')}
               </label>
               <Input
                 value={bulkRowForm.qrPattern}
@@ -1570,13 +1578,13 @@ export default function StructurePage() {
                 placeholder="ROW-{letter}"
               />
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                Use {'{letter}'} for letter placeholder (e.g., "QR-ROW-{'{letter}'}" → QR-ROW-A, QR-ROW-B...)
+                {t('structure.use_qr_letter_placeholder', 'Use {letter} for letter placeholder (e.g., "ROW-{letter}" → ROW-A, ROW-B...)')}
               </div>
             </div>
 
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
-                Letter Sequence
+                {t('structure.letter_sequence', 'Letter Sequence')}
               </label>
               <Input
                 value={bulkRowForm.sequence}
@@ -1584,7 +1592,7 @@ export default function StructurePage() {
                 placeholder="A-J"
               />
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                Format: START-END (e.g., "A-Z" for all letters, "A-J" for first 10)
+                {t('structure.sequence_help', 'Format: START-END (e.g., "A-Z" for all letters, "A-J" for first 10)')}
               </div>
             </div>
 
@@ -1597,7 +1605,7 @@ export default function StructurePage() {
               border: '1px solid var(--border)',
             }}>
               <div style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', color: 'var(--text-secondary)' }}>
-                Preview (first 3):
+                {t('structure.preview_first_3', 'Preview (first 3):')}
               </div>
               {(() => {
                 const [start, end] = bulkRowForm.sequence.split('-');
@@ -1625,7 +1633,7 @@ export default function StructurePage() {
                     })}
                     {total > 3 && (
                       <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                        ... and {total - 3} more ({total} total)
+                        {t('structure.and_more_total', '... and {count} more ({total} total)').replace('{count}', String(total - 3)).replace('{total}', String(total))}
                       </div>
                     )}
                   </>
@@ -1635,7 +1643,7 @@ export default function StructurePage() {
 
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
               <Button variant="secondary" onClick={() => setModalType(null)}>
-                Cancel
+                {t('structure.cancel', 'Cancel')}
               </Button>
               <Button
                 variant="primary"
@@ -1643,8 +1651,8 @@ export default function StructurePage() {
                 disabled={bulkCreateRowsMutation.isPending || !bulkRowForm.namePattern || !bulkRowForm.qrPattern || !bulkRowForm.sequence.match(/^[A-Z]-[A-Z]$/i)}
               >
                 {bulkCreateRowsMutation.isPending 
-                  ? 'Creating...' 
-                  : `Create Rows ${bulkRowForm.sequence}`}
+                  ? t('structure.creating', 'Creating...') 
+                  : t('structure.create_rows_btn', 'Create Rows {sequence}').replace('{sequence}', bulkRowForm.sequence)}
               </Button>
             </div>
           </div>
@@ -1656,9 +1664,9 @@ export default function StructurePage() {
         isOpen={confirmDelete.isOpen}
         onClose={() => setConfirmDelete({ isOpen: false, type: '', id: '', name: '' })}
         onConfirm={confirmDeleteAction}
-        title="Confirm Deletion"
-        message={`Are you sure you want to delete ${confirmDelete.name}? This action cannot be undone.`}
-        confirmText="Delete"
+        title={t('structure.confirm_delete', 'Confirm Deletion')}
+        message={t('structure.confirm_delete_msg', 'Are you sure you want to delete {name}? This action cannot be undone.').replace('{name}', confirmDelete.name)}
+        confirmText={t('structure.delete', 'Delete')}
         variant="danger"
         isLoading={deleteMutation.isPending}
       />
