@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { apiClient } from '@/lib/api/client';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { Shield, AlertCircle, Eye, EyeOff, ArrowLeft, KeyRound } from 'lucide-react';
+import { Shield, AlertCircle, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function LoginPage() {
@@ -26,7 +26,6 @@ export default function LoginPage() {
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [otpSentCode, setOtpSentCode] = useState('');
   
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -77,14 +76,8 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await apiClient.post('/auth/forgot-password', { email: forgotEmail });
-      const { otp: generatedOtp } = response.data;
-      if (generatedOtp) {
-        setOtpSentCode(generatedOtp);
-        // Automatically prefill OTP in dev/test environment for superior developer convenience
-        setOtp(generatedOtp);
-      }
-      toast.success('Reset OTP generated successfully!');
+      await apiClient.post('/auth/forgot-password', { email: forgotEmail });
+      toast.success('Reset OTP verification code generated successfully!');
       setView('reset');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to request reset OTP');
@@ -116,7 +109,6 @@ export default function LoginPage() {
       setOtp('');
       setNewPassword('');
       setConfirmPassword('');
-      setOtpSentCode('');
       setView('login');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to reset password. Check if the OTP is correct.');
@@ -580,12 +572,7 @@ export default function LoginPage() {
                     onChange={(e) => setOtp(e.target.value)}
                     required
                   />
-                  {otpSentCode && (
-                    <div style={{ fontSize: '12.5px', color: 'var(--success)', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 500 }}>
-                      <KeyRound size={14} />
-                      Mock Dev OTP auto-filled: {otpSentCode}
-                    </div>
-                  )}
+
                 </div>
 
                 <div style={{ marginBottom: '20px' }}>
