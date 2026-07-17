@@ -89,6 +89,10 @@ export default function StructurePage() {
   
   // Selected slot for detail view
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
+  const [selectedEntity, setSelectedEntity] = useState<{
+    type: 'room' | 'shelf' | 'row' | 'slot';
+    data: any;
+  } | null>(null);
   
   // Modal state
   const [modalType, setModalType] = useState<ModalType>(null);
@@ -515,6 +519,7 @@ export default function StructurePage() {
                   <div key={room.id}>
                     {/* Room */}
                     <div
+                      onClick={() => { setSelectedSlot(null); setSelectedEntity({ type: 'room', data: room }); }}
                       style={{
                         padding: '10px 12px',
                         display: 'flex',
@@ -522,10 +527,19 @@ export default function StructurePage() {
                         gap: '8px',
                         cursor: 'pointer',
                         borderRadius: 'var(--radius)',
+                        background: selectedEntity?.type === 'room' && selectedEntity?.data?.id === room.id ? 'var(--bg-subtle)' : 'transparent',
                         transition: 'background 150ms',
                       }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-subtle)'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                      onMouseEnter={(e) => { 
+                        if (selectedEntity?.type !== 'room' || selectedEntity?.data?.id !== room.id) {
+                          e.currentTarget.style.background = 'var(--bg-subtle)'; 
+                        }
+                      }}
+                      onMouseLeave={(e) => { 
+                        if (selectedEntity?.type !== 'room' || selectedEntity?.data?.id !== room.id) {
+                          e.currentTarget.style.background = 'transparent'; 
+                        }
+                      }}
                     >
                       <button
                         onClick={() => toggleRoom(room.id)}
@@ -612,6 +626,7 @@ export default function StructurePage() {
                       return (
                         <div key={shelf.id} style={{ marginLeft: '28px' }}>
                           <div
+                            onClick={() => { setSelectedSlot(null); setSelectedEntity({ type: 'shelf', data: shelf }); }}
                             style={{
                               padding: '8px 12px',
                               display: 'flex',
@@ -619,10 +634,19 @@ export default function StructurePage() {
                               gap: '8px',
                               cursor: 'pointer',
                               borderRadius: 'var(--radius)',
+                              background: selectedEntity?.type === 'shelf' && selectedEntity?.data?.id === shelf.id ? 'var(--bg-subtle)' : 'transparent',
                               transition: 'background 150ms',
                             }}
-                            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-subtle)'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                            onMouseEnter={(e) => { 
+                              if (selectedEntity?.type !== 'shelf' || selectedEntity?.data?.id !== shelf.id) {
+                                e.currentTarget.style.background = 'var(--bg-subtle)'; 
+                              }
+                            }}
+                            onMouseLeave={(e) => { 
+                              if (selectedEntity?.type !== 'shelf' || selectedEntity?.data?.id !== shelf.id) {
+                                e.currentTarget.style.background = 'transparent'; 
+                              }
+                            }}
                           >
                             <button
                               onClick={() => toggleShelf(shelf.id)}
@@ -727,6 +751,7 @@ export default function StructurePage() {
                             return (
                               <div key={row.id} style={{ marginLeft: '28px' }}>
                                 <div
+                                  onClick={() => { setSelectedSlot(null); setSelectedEntity({ type: 'row', data: row }); }}
                                   style={{
                                     padding: '8px 12px',
                                     display: 'flex',
@@ -734,13 +759,22 @@ export default function StructurePage() {
                                     gap: '8px',
                                     cursor: 'pointer',
                                     borderRadius: 'var(--radius)',
+                                    background: selectedEntity?.type === 'row' && selectedEntity?.data?.id === row.id ? 'var(--bg-subtle)' : 'transparent',
                                     transition: 'background 150ms',
                                   }}
-                                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-subtle)'; }}
-                                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                                  onMouseEnter={(e) => { 
+                                    if (selectedEntity?.type !== 'row' || selectedEntity?.data?.id !== row.id) {
+                                      e.currentTarget.style.background = 'var(--bg-subtle)'; 
+                                    }
+                                  }}
+                                  onMouseLeave={(e) => { 
+                                    if (selectedEntity?.type !== 'row' || selectedEntity?.data?.id !== row.id) {
+                                      e.currentTarget.style.background = 'transparent'; 
+                                    }
+                                  }}
                                 >
                                   <button
-                                    onClick={() => toggleRow(row.id)}
+                                    onClick={(e) => { e.stopPropagation(); toggleRow(row.id); }}
                                     style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px' }}
                                   >
                                     {isRowExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
@@ -839,7 +873,7 @@ export default function StructurePage() {
                                 {isRowExpanded && slots.map((slot) => (
                                   <div
                                     key={slot.id}
-                                    onClick={() => setSelectedSlot(slot)}
+                                    onClick={() => { setSelectedSlot(slot); setSelectedEntity({ type: 'slot', data: slot }); }}
                                     style={{
                                       marginLeft: '28px',
                                       padding: '6px 12px',
@@ -848,16 +882,16 @@ export default function StructurePage() {
                                       gap: '8px',
                                       cursor: 'pointer',
                                       borderRadius: 'var(--radius)',
-                                      background: selectedSlot?.id === slot.id ? 'var(--bg-subtle)' : 'transparent',
+                                      background: selectedEntity?.type === 'slot' && selectedEntity?.data?.id === slot.id ? 'var(--bg-subtle)' : 'transparent',
                                       transition: 'background 150ms',
                                     }}
                                     onMouseEnter={(e) => { 
-                                      if (selectedSlot?.id !== slot.id) {
+                                      if (selectedEntity?.type !== 'slot' || selectedEntity?.data?.id !== slot.id) {
                                         e.currentTarget.style.background = 'var(--bg-subtle)'; 
                                       }
                                     }}
                                     onMouseLeave={(e) => { 
-                                      if (selectedSlot?.id !== slot.id) {
+                                      if (selectedEntity?.type !== 'slot' || selectedEntity?.data?.id !== slot.id) {
                                         e.currentTarget.style.background = 'transparent'; 
                                       }
                                     }}
@@ -923,62 +957,204 @@ export default function StructurePage() {
 
         {/* Right: Detail Panel */}
         <Card>
-          <PageHeader title="Slot Details" />
-          {selectedSlot ? (
+          <PageHeader title={selectedEntity ? `${selectedEntity.type.charAt(0).toUpperCase() + selectedEntity.type.slice(1)} Details` : "Details"} />
+          {selectedEntity ? (
             <div style={{ padding: '16px' }}>
-              <div style={{ marginBottom: '16px' }}>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                  LOCATION PATH
-                </div>
-                <div style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: 500 }}>
-                  {selectedSlot.row.shelf.room.name} / {selectedSlot.row.shelf.name} / {selectedSlot.row.name} / {selectedSlot.name}
-                </div>
-              </div>
+              {selectedEntity.type === 'slot' && (
+                <>
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                      LOCATION PATH
+                    </div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: 500 }}>
+                      {selectedEntity.data.row?.shelf?.room?.name} / {selectedEntity.data.row?.shelf?.name} / {selectedEntity.data.row?.name} / {selectedEntity.data.name}
+                    </div>
+                  </div>
 
-              <div style={{ marginBottom: '16px' }}>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                  QR CODE
-                </div>
-                <div style={{ fontSize: '13px', fontFamily: 'monospace', color: 'var(--brand)' }}>
-                  {selectedSlot.qrCode}
-                </div>
-              </div>
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                      QR CODE
+                    </div>
+                    <div style={{ fontSize: '13px', fontFamily: 'monospace', color: 'var(--brand)' }}>
+                      {selectedEntity.data.qrCode}
+                    </div>
+                  </div>
 
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                  STATUS
-                </div>
-                {(() => {
-                  const boxes = selectedSlot.boxes || [];
-                  const hasBox = boxes.length > 0;
-                  
-                  if (hasBox) {
-                    return (
-                      <div>
-                        <Badge variant="warning">Occupied</Badge>
-                        <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                          {boxes.map(box => box.label).join(', ')}
-                        </div>
-                      </div>
-                    );
-                  }
-                  return <Badge variant="success">Available</Badge>;
-                })()}
-              </div>
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                      STATUS
+                    </div>
+                    {(() => {
+                      const boxes = selectedEntity.data.boxes || [];
+                      const hasBox = boxes.length > 0;
+                      
+                      if (hasBox) {
+                        return (
+                          <div>
+                            <Badge variant="warning">Occupied</Badge>
+                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                              {boxes.map((box: any) => box.label).join(', ')}
+                            </div>
+                          </div>
+                        );
+                      }
+                      return <Badge variant="success">Available</Badge>;
+                    })()}
+                  </div>
 
-              {canCreate && !(selectedSlot.boxes && selectedSlot.boxes.length > 0) && (
-                <div style={{ width: '100%' }}>
-                  <Button onClick={() => openCreateModal('assign-box')} variant="primary">
-                    <Package size={14} />
-                    Assign Box to Slot
-                  </Button>
-                </div>
+                  {canCreate && !(selectedEntity.data.boxes && selectedEntity.data.boxes.length > 0) && (
+                    <div style={{ width: '100%' }}>
+                      <Button onClick={() => openCreateModal('assign-box')} variant="primary">
+                        <Package size={14} />
+                        Assign Box to Slot
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {selectedEntity.type === 'room' && (
+                <>
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                      ROOM NAME
+                    </div>
+                    <div style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600 }}>
+                      {selectedEntity.data.name}
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                      QR CODE
+                    </div>
+                    <div style={{ fontSize: '13px', fontFamily: 'monospace', color: 'var(--brand)' }}>
+                      {selectedEntity.data.qrCode}
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                      STRUCTURE DETAILS
+                    </div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                      Contains <strong>{allShelves.filter((s: any) => s.roomId === selectedEntity.data.id).length}</strong> shelves
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                      CREATED AT
+                    </div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                      {new Date(selectedEntity.data.createdAt).toLocaleString()}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {selectedEntity.type === 'shelf' && (
+                <>
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                      SHELF NAME
+                    </div>
+                    <div style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600 }}>
+                      {selectedEntity.data.name}
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                      PARENT ROOM
+                    </div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: 500 }}>
+                      {selectedEntity.data.room?.name || 'Unknown Room'}
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                      QR CODE
+                    </div>
+                    <div style={{ fontSize: '13px', fontFamily: 'monospace', color: 'var(--brand)' }}>
+                      {selectedEntity.data.qrCode}
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                      POSITION
+                    </div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                      {selectedEntity.data.position}
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                      STRUCTURE DETAILS
+                    </div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                      Contains <strong>{allRows.filter((r: any) => r.shelfId === selectedEntity.data.id).length}</strong> rows
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {selectedEntity.type === 'row' && (
+                <>
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                      ROW NAME
+                    </div>
+                    <div style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 600 }}>
+                      {selectedEntity.data.name}
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                      PARENT SHELF
+                    </div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: 500 }}>
+                      {selectedEntity.data.shelf?.room?.name} / {selectedEntity.data.shelf?.name}
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                      QR CODE
+                    </div>
+                    <div style={{ fontSize: '13px', fontFamily: 'monospace', color: 'var(--brand)' }}>
+                      {selectedEntity.data.qrCode}
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                      POSITION
+                    </div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                      {selectedEntity.data.position}
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                      STRUCTURE DETAILS
+                    </div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                      Contains <strong>{allSlots.filter((s: any) => s.rowId === selectedEntity.data.id).length}</strong> slots
+                    </div>
+                  </div>
+                </>
               )}
             </div>
           ) : (
             <div style={{ textAlign: 'center', padding: '48px 24px', color: 'var(--text-muted)' }}>
               <Square size={48} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
-              <p style={{ fontSize: '13px' }}>Select a slot to view details</p>
+              <p style={{ fontSize: '13px' }}>Select an item in the structure tree to view details</p>
             </div>
           )}
         </Card>
