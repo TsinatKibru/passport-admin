@@ -533,6 +533,7 @@ export default function StructurePage() {
               {rooms.map((room) => {
                 const isExpanded = expandedRooms.has(room.id);
                 const shelves = allShelves.filter(s => s.roomId === room.id);
+                const shelvesCount = room._count?.shelves ?? shelves.length;
                 
                 return (
                   <div key={room.id}>
@@ -617,20 +618,20 @@ export default function StructurePage() {
                       )}
                       {canDelete && (
                         <button
-                          disabled={shelves.length > 0}
+                          disabled={shelvesCount > 0}
                           onClick={(e) => { e.stopPropagation(); handleDelete('room', room.id, room.name); }}
                           style={{
                             padding: '4px',
                             border: 'none',
                             background: 'transparent',
-                            cursor: shelves.length > 0 ? 'not-allowed' : 'pointer',
-                            color: shelves.length > 0 ? 'var(--text-muted)' : 'var(--danger)',
-                            opacity: shelves.length > 0 ? 0.4 : 1,
+                            cursor: shelvesCount > 0 ? 'not-allowed' : 'pointer',
+                            color: shelvesCount > 0 ? 'var(--text-muted)' : 'var(--danger)',
+                            opacity: shelvesCount > 0 ? 0.4 : 1,
                             display: 'inline-flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                           }}
-                          title={shelves.length > 0 ? "Cannot delete Room: it still contains Shelves. Delete shelves first." : "Delete Room"}
+                          title={shelvesCount > 0 ? "Cannot delete Room: it still contains Shelves. Delete shelves first." : "Delete Room"}
                         >
                           <Trash2 size={14} />
                         </button>
@@ -641,6 +642,7 @@ export default function StructurePage() {
                     {isExpanded && shelves.map((shelf) => {
                       const isShelfExpanded = expandedShelves.has(shelf.id);
                       const rows = allRows.filter(r => r.shelfId === shelf.id);
+                      const rowsCount = shelf._count?.rows ?? rows.length;
                       
                       return (
                         <div key={shelf.id} style={{ marginLeft: '28px' }}>
@@ -742,20 +744,20 @@ export default function StructurePage() {
                             )}
                             {canDelete && (
                               <button
-                                disabled={rows.length > 0}
+                                disabled={rowsCount > 0}
                                 onClick={(e) => { e.stopPropagation(); handleDelete('shelf', shelf.id, shelf.name); }}
                                 style={{
                                   padding: '3px',
                                   border: 'none',
                                   background: 'transparent',
-                                  cursor: rows.length > 0 ? 'not-allowed' : 'pointer',
-                                  color: rows.length > 0 ? 'var(--text-muted)' : 'var(--danger)',
-                                  opacity: rows.length > 0 ? 0.4 : 1,
+                                  cursor: rowsCount > 0 ? 'not-allowed' : 'pointer',
+                                  color: rowsCount > 0 ? 'var(--text-muted)' : 'var(--danger)',
+                                  opacity: rowsCount > 0 ? 0.4 : 1,
                                   display: 'inline-flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
                                 }}
-                                title={rows.length > 0 ? "Cannot delete Shelf: it still contains Rows. Delete rows first." : "Delete Shelf"}
+                                title={rowsCount > 0 ? "Cannot delete Shelf: it still contains Rows. Delete rows first." : "Delete Shelf"}
                               >
                                 <Trash2 size={12} />
                               </button>
@@ -766,6 +768,7 @@ export default function StructurePage() {
                           {isShelfExpanded && rows.map((row) => {
                             const isRowExpanded = expandedRows.has(row.id);
                             const slots = allSlots.filter(s => s.rowId === row.id);
+                            const slotsCount = row._count?.slots ?? slots.length;
                             
                             return (
                               <div key={row.id} style={{ marginLeft: '28px' }}>
@@ -868,20 +871,20 @@ export default function StructurePage() {
                                   )}
                                   {canDelete && (
                                     <button
-                                      disabled={slots.length > 0}
+                                      disabled={slotsCount > 0}
                                       onClick={(e) => { e.stopPropagation(); handleDelete('row', row.id, row.name); }}
                                       style={{
                                         padding: '2px',
                                         border: 'none',
                                         background: 'transparent',
-                                        cursor: slots.length > 0 ? 'not-allowed' : 'pointer',
-                                        color: slots.length > 0 ? 'var(--text-muted)' : 'var(--danger)',
-                                        opacity: slots.length > 0 ? 0.4 : 1,
+                                        cursor: slotsCount > 0 ? 'not-allowed' : 'pointer',
+                                        color: slotsCount > 0 ? 'var(--text-muted)' : 'var(--danger)',
+                                        opacity: slotsCount > 0 ? 0.4 : 1,
                                         display: 'inline-flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                       }}
-                                      title={slots.length > 0 ? "Cannot delete Row: it still contains Slots. Delete slots first." : "Delete Row"}
+                                      title={slotsCount > 0 ? "Cannot delete Row: it still contains Slots. Delete slots first." : "Delete Row"}
                                     >
                                       <Trash2 size={11} />
                                     </button>
