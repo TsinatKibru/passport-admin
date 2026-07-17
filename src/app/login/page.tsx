@@ -6,14 +6,28 @@ import Image from 'next/image';
 import { apiClient } from '@/lib/api/client';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { Shield, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Shield, AlertCircle, Eye, EyeOff, ArrowLeft, KeyRound } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function LoginPage() {
   const router = useRouter();
+  
+  // Login Form States
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  
+  // Authentication View Flow: 'login' | 'forgot' | 'reset'
+  const [view, setView] = useState<'login' | 'forgot' | 'reset'>('login');
+  
+  // Password Recovery States
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [otpSentCode, setOtpSentCode] = useState('');
+  
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -21,6 +35,14 @@ export default function LoginPage() {
     // If token already exists, redirect to dashboard
     if (localStorage.getItem('accessToken')) {
       router.push('/');
+      return;
+    }
+    
+    // Load remembered email
+    const savedEmail = localStorage.getItem('rememberedEmail');
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
     }
   }, [router]);
 
@@ -33,9 +55,71 @@ export default function LoginPage() {
       const response = await apiClient.post('/auth/login', { email, password });
       const { accessToken } = response.data;
       localStorage.setItem('accessToken', accessToken);
+      
+      if (rememberMe) {
+        localStorage.setItem('rememberedEmail', email);
+      } else {
+        localStorage.removeItem('rememberedEmail');
+      }
+      
+      toast.success('Logged in successfully');
       router.push('/');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Invalid email or password');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const response = await apiClient.post('/auth/forgot-password', { email: forgotEmail });
+      const { otp: generatedOtp } = response.data;
+      if (generatedOtp) {
+        setOtpSentCode(generatedOtp);
+        // Automatically prefill OTP in dev/test environment for superior developer convenience
+        setOtp(generatedOtp);
+      }
+      toast.success('Reset OTP generated successfully!');
+      setView('reset');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to request reset OTP');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await apiClient.post('/auth/reset-password', {
+        email: forgotEmail,
+        otp,
+        newPassword,
+      });
+      toast.success('Password reset successfully! Please sign in with your new password.');
+      setEmail(forgotEmail);
+      // Clean up states
+      setForgotEmail('');
+      setOtp('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setOtpSentCode('');
+      setView('login');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to reset password. Check if the OTP is correct.');
     } finally {
       setLoading(false);
     }
@@ -178,155 +262,388 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div style={{ marginBottom: '32px' }}>
-            <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 8px 0' }}>
-              Welcome back
-            </h1>
-            <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: 0 }}>
-              Sign in with your staff or administrator credentials
-            </p>
-          </div>
+          {view === 'login' && (
+            <>
+              <div style={{ marginBottom: '32px' }}>
+                <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 8px 0' }}>
+                  Welcome back
+                </h1>
+                <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: 0 }}>
+                  Sign in with your staff or administrator credentials
+                </p>
+              </div>
 
-          {/* Error Message */}
-          {error && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                padding: '12px 14px',
-                background: 'var(--danger-bg)',
-                border: '1px solid var(--danger)',
-                borderRadius: 'var(--radius)',
-                marginBottom: '24px',
-              }}
-            >
-              <AlertCircle size={16} color="var(--danger)" style={{ flexShrink: 0 }} />
-              <span style={{ fontSize: '13px', color: 'var(--danger)', fontWeight: 500 }}>{error}</span>
-            </div>
+              {/* Error Message */}
+              {error && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '12px 14px',
+                    background: 'var(--danger-bg)',
+                    border: '1px solid var(--danger)',
+                    borderRadius: 'var(--radius)',
+                    marginBottom: '24px',
+                  }}
+                >
+                  <AlertCircle size={16} color="var(--danger)" style={{ flexShrink: 0 }} />
+                  <span style={{ fontSize: '13px', color: 'var(--danger)', fontWeight: 500 }}>{error}</span>
+                </div>
+              )}
+
+              {/* Login Form */}
+              <form onSubmit={handleSubmit}>
+                <div style={{ marginBottom: '20px' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '13px',
+                      fontWeight: 500,
+                      color: 'var(--text-primary)',
+                      marginBottom: '6px',
+                    }}
+                  >
+                    Email Address
+                  </label>
+                  <Input
+                    type="email"
+                    placeholder="admin@passport-track.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '13px',
+                      fontWeight: 500,
+                      color: 'var(--text-primary)',
+                      marginBottom: '6px',
+                    }}
+                  >
+                    Password
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <Input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      style={{ paddingRight: '40px' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(prev => !prev)}
+                      style={{
+                        position: 'absolute',
+                        right: '8px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'var(--text-muted)',
+                        width: '24px',
+                        height: '24px',
+                        borderRadius: '4px',
+                      }}
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Remember Me and Forgot Password */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '24px',
+                }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      style={{
+                        width: '15px',
+                        height: '15px',
+                        border: '1px solid var(--border)',
+                        borderRadius: '4px',
+                        accentColor: 'var(--brand)',
+                        cursor: 'pointer',
+                      }}
+                    />
+                    Remember me
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setView('forgot');
+                      setError('');
+                      setForgotEmail(email);
+                    }}
+                    style={{
+                      fontSize: '13px',
+                      color: 'var(--brand)',
+                      textDecoration: 'none',
+                      fontWeight: 500,
+                      background: 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: 0,
+                    }}
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="md"
+                  disabled={loading}
+                  style={{ width: '100%', height: '40px' }}
+                >
+                  <div style={{ width: '100%', textAlign: 'center', fontWeight: 600 }}>
+                    {loading ? 'Signing in...' : 'Sign In'}
+                  </div>
+                </Button>
+              </form>
+            </>
           )}
 
-          {/* Login Form */}
-          <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: '20px' }}>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '13px',
-                  fontWeight: 500,
-                  color: 'var(--text-primary)',
-                  marginBottom: '6px',
-                }}
-              >
-                Email Address
-              </label>
-              <Input
-                type="email"
-                placeholder="admin@passport-track.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '13px',
-                  fontWeight: 500,
-                  color: 'var(--text-primary)',
-                  marginBottom: '6px',
-                }}
-              >
-                Password
-              </label>
-              <div style={{ position: 'relative' }}>
-                <Input
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  style={{ paddingRight: '40px' }}
-                />
+          {view === 'forgot' && (
+            <>
+              <div style={{ marginBottom: '32px' }}>
                 <button
                   type="button"
-                  onClick={() => setShowPassword(prev => !prev)}
+                  onClick={() => { setView('login'); setError(''); }}
                   style={{
-                    position: 'absolute',
-                    right: '8px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    color: 'var(--brand)',
                     background: 'transparent',
                     border: 'none',
                     cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'var(--text-muted)',
-                    width: '24px',
-                    height: '24px',
-                    borderRadius: '4px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    padding: 0,
+                    marginBottom: '16px',
                   }}
                 >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  <ArrowLeft size={16} />
+                  Back to Sign In
                 </button>
+                <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 8px 0' }}>
+                  Reset Password
+                </h1>
+                <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: 0 }}>
+                  Enter your email address to receive a 6-digit verification code.
+                </p>
               </div>
-            </div>
 
-            {/* Remember Me and Forgot Password */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '24px',
-            }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: 'var(--text-secondary)' }}>
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
+              {/* Error Message */}
+              {error && (
+                <div
                   style={{
-                    width: '15px',
-                    height: '15px',
-                    border: '1px solid var(--border)',
-                    borderRadius: '4px',
-                    accentColor: 'var(--brand)',
-                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '12px 14px',
+                    background: 'var(--danger-bg)',
+                    border: '1px solid var(--danger)',
+                    borderRadius: 'var(--radius)',
+                    marginBottom: '24px',
                   }}
-                />
-                Remember me
-              </label>
-              <a
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  alert("Please contact your system administrator to request password recovery or reset options.");
-                }}
-                style={{
-                  fontSize: '13px',
-                  color: 'var(--brand)',
-                  textDecoration: 'none',
-                  fontWeight: 500,
-                }}
-              >
-                Forgot password?
-              </a>
-            </div>
+                >
+                  <AlertCircle size={16} color="var(--danger)" style={{ flexShrink: 0 }} />
+                  <span style={{ fontSize: '13px', color: 'var(--danger)', fontWeight: 500 }}>{error}</span>
+                </div>
+              )}
 
-            <Button
-              type="submit"
-              variant="primary"
-              size="md"
-              disabled={loading}
-              style={{ width: '100%', height: '40px' }}
-            >
-              <div style={{ width: '100%', textAlign: 'center', fontWeight: 600 }}>
-                {loading ? 'Signing in...' : 'Sign In'}
+              {/* Forgot Password Form */}
+              <form onSubmit={handleForgotPassword}>
+                <div style={{ marginBottom: '24px' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '13px',
+                      fontWeight: 500,
+                      color: 'var(--text-primary)',
+                      marginBottom: '6px',
+                    }}
+                  >
+                    Email Address
+                  </label>
+                  <Input
+                    type="email"
+                    placeholder="admin@passport-track.com"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="md"
+                  disabled={loading}
+                  style={{ width: '100%', height: '40px' }}
+                >
+                  <div style={{ width: '100%', textAlign: 'center', fontWeight: 600 }}>
+                    {loading ? 'Sending code...' : 'Send OTP Code'}
+                  </div>
+                </Button>
+              </form>
+            </>
+          )}
+
+          {view === 'reset' && (
+            <>
+              <div style={{ marginBottom: '32px' }}>
+                <button
+                  type="button"
+                  onClick={() => { setView('forgot'); setError(''); }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    color: 'var(--brand)',
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    padding: 0,
+                    marginBottom: '16px',
+                  }}
+                >
+                  <ArrowLeft size={16} />
+                  Change Email
+                </button>
+                <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 8px 0' }}>
+                  Verification Code
+                </h1>
+                <p style={{ fontSize: '14px', color: 'var(--text-muted)', margin: 0 }}>
+                  We sent a 6-digit verification code to <strong style={{ color: 'var(--text-primary)' }}>{forgotEmail}</strong>.
+                </p>
               </div>
-            </Button>
-          </form>
+
+              {/* Error Message */}
+              {error && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '12px 14px',
+                    background: 'var(--danger-bg)',
+                    border: '1px solid var(--danger)',
+                    borderRadius: 'var(--radius)',
+                    marginBottom: '24px',
+                  }}
+                >
+                  <AlertCircle size={16} color="var(--danger)" style={{ flexShrink: 0 }} />
+                  <span style={{ fontSize: '13px', color: 'var(--danger)', fontWeight: 500 }}>{error}</span>
+                </div>
+              )}
+
+              {/* Reset Password Form */}
+              <form onSubmit={handleResetPassword}>
+                <div style={{ marginBottom: '20px' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '13px',
+                      fontWeight: 500,
+                      color: 'var(--text-primary)',
+                      marginBottom: '6px',
+                    }}
+                  >
+                    6-digit OTP Code
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="123456"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    required
+                  />
+                  {otpSentCode && (
+                    <div style={{ fontSize: '12.5px', color: 'var(--success)', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 500 }}>
+                      <KeyRound size={14} />
+                      Mock Dev OTP auto-filled: {otpSentCode}
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '13px',
+                      fontWeight: 500,
+                      color: 'var(--text-primary)',
+                      marginBottom: '6px',
+                    }}
+                  >
+                    New Password
+                  </label>
+                  <Input
+                    type="password"
+                    placeholder="••••••••"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div style={{ marginBottom: '24px' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '13px',
+                      fontWeight: 500,
+                      color: 'var(--text-primary)',
+                      marginBottom: '6px',
+                    }}
+                  >
+                    Confirm New Password
+                  </label>
+                  <Input
+                    type="password"
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="md"
+                  disabled={loading}
+                  style={{ width: '100%', height: '40px' }}
+                >
+                  <div style={{ width: '100%', textAlign: 'center', fontWeight: 600 }}>
+                    {loading ? 'Resetting password...' : 'Reset Password'}
+                  </div>
+                </Button>
+              </form>
+            </>
+          )}
 
           {/* Footer Info */}
           <div style={{ marginTop: '48px', textAlign: 'center' }}>
