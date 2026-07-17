@@ -31,6 +31,9 @@ interface Room {
   qrCode: string;
   createdAt: string;
   updatedAt: string;
+  _count?: {
+    shelves: number;
+  };
 }
 
 interface Shelf {
@@ -42,6 +45,9 @@ interface Shelf {
   room: Room;
   createdAt: string;
   updatedAt: string;
+  _count?: {
+    rows: number;
+  };
 }
 
 interface Row {
@@ -53,6 +59,9 @@ interface Row {
   shelf: Shelf;
   createdAt: string;
   updatedAt: string;
+  _count?: {
+    slots: number;
+  };
 }
 
 interface Slot {
@@ -243,6 +252,10 @@ export default function StructurePage() {
       setIsEditing(false);
       setEditId('');
       setFormData({ name: '', qrCode: '', position: 1 });
+      if (selectedEntity && selectedEntity.data.id === variables.id) {
+        setSelectedEntity(null);
+        setSelectedSlot(null);
+      }
       toast.success(`${variables.type.charAt(0).toUpperCase() + variables.type.slice(1)} updated successfully`);
     },
     onError: (error: any) => {
@@ -371,6 +384,10 @@ export default function StructurePage() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [variables.type + 's'] });
+      if (selectedEntity && selectedEntity.data.id === variables.id) {
+        setSelectedEntity(null);
+        setSelectedSlot(null);
+      }
       toast.success(`${variables.type.charAt(0).toUpperCase() + variables.type.slice(1)} deleted successfully`);
     },
     onError: (error: any) => {
@@ -388,6 +405,8 @@ export default function StructurePage() {
       queryClient.invalidateQueries({ queryKey: ['boxes'] });
       queryClient.invalidateQueries({ queryKey: ['slots'] });
       setModalType(null);
+      setSelectedEntity(null);
+      setSelectedSlot(null);
       toast.success('Box assigned to slot successfully');
     },
     onError: (error: any) => {
@@ -1038,7 +1057,7 @@ export default function StructurePage() {
                       STRUCTURE DETAILS
                     </div>
                     <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                      Contains <strong>{allShelves.filter((s: any) => s.roomId === selectedEntity.data.id).length}</strong> shelves
+                      Contains <strong>{selectedEntity.data._count?.shelves ?? allShelves.filter((s: any) => s.roomId === selectedEntity.data.id).length}</strong> shelves
                     </div>
                   </div>
 
@@ -1096,7 +1115,7 @@ export default function StructurePage() {
                       STRUCTURE DETAILS
                     </div>
                     <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                      Contains <strong>{allRows.filter((r: any) => r.shelfId === selectedEntity.data.id).length}</strong> rows
+                      Contains <strong>{selectedEntity.data._count?.rows ?? allRows.filter((r: any) => r.shelfId === selectedEntity.data.id).length}</strong> rows
                     </div>
                   </div>
                 </>
@@ -1145,7 +1164,7 @@ export default function StructurePage() {
                       STRUCTURE DETAILS
                     </div>
                     <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                      Contains <strong>{allSlots.filter((s: any) => s.rowId === selectedEntity.data.id).length}</strong> slots
+                      Contains <strong>{selectedEntity.data._count?.slots ?? allSlots.filter((s: any) => s.rowId === selectedEntity.data.id).length}</strong> slots
                     </div>
                   </div>
                 </>
