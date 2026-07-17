@@ -1,10 +1,11 @@
 'use client';
 
-import { Search, Bell, Moon, Sun, Menu, X } from 'lucide-react';
+import { Search, Moon, Sun, Menu, X, Languages } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api/client';
 import { useRole } from '@/lib/auth/RoleContext';
+import { useTranslation } from '@/lib/contexts/LanguageContext';
 
 interface HeaderProps {
   title: string;
@@ -23,7 +24,7 @@ interface SearchResult {
 export default function Header({ title, subtitle, onMenuToggle }: HeaderProps) {
   const router = useRouter();
   const { user: userProfile } = useRole();
-  const [hasNotification] = useState(true);
+  const { locale, setLocale, t } = useTranslation();
   const [isDark, setIsDark] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -272,7 +273,7 @@ export default function Header({ title, subtitle, onMenuToggle }: HeaderProps) {
           )}
           <input
             type="text"
-            placeholder="Search passports, boxes, slots..."
+            placeholder={t('header.search_placeholder', 'Search passports, boxes, slots...')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
@@ -320,11 +321,11 @@ export default function Header({ title, subtitle, onMenuToggle }: HeaderProps) {
             >
               {isSearching ? (
                 <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
-                  Searching...
+                  {t('header.search_searching', 'Searching...')}
                 </div>
               ) : searchResults.length === 0 ? (
                 <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
-                  {searchQuery.length < 2 ? 'Type at least 2 characters' : 'No results found'}
+                  {searchQuery.length < 2 ? t('header.search_min_char', 'Type at least 2 characters') : t('header.search_no_results', 'No results found')}
                 </div>
               ) : (
                 <div style={{ padding: '8px' }}>
@@ -421,54 +422,55 @@ export default function Header({ title, subtitle, onMenuToggle }: HeaderProps) {
           {isDark ? <Sun size={16} color="var(--text-secondary)" /> : <Moon size={16} color="var(--text-secondary)" />}
         </button>
 
-        {/* Bell - Hidden on very small screens */}
+        {/* Language Toggle - Replaces notification bell */}
         <style>{`
-          .bell-btn {
+          .lang-btn {
             display: flex;
           }
           @media (max-width: 480px) {
-            .bell-btn {
+            .lang-btn {
+              padding: 0 8px !important;
+            }
+            .lang-btn span {
               display: none !important;
             }
           }
         `}</style>
         <button
-          className="bell-btn"
+          className="lang-btn"
+          onClick={() => setLocale(locale === 'en' ? 'am' : 'en')}
           style={{
-            width: '34px',
             height: '34px',
-            border: 'none',
-            background: 'transparent',
+            border: '1px solid var(--border)',
+            background: 'var(--bg-surface)',
             borderRadius: 'var(--radius-lg)',
             cursor: 'pointer',
             alignItems: 'center',
             justifyContent: 'center',
-            position: 'relative',
-            transition: 'background 150ms',
+            gap: '6px',
+            padding: '0 10px',
+            transition: 'all 150ms ease',
             flexShrink: 0,
+            boxShadow: 'var(--shadow-sm)',
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = 'var(--bg-subtle)';
+            e.currentTarget.style.borderColor = 'var(--brand)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.background = 'var(--bg-surface)';
+            e.currentTarget.style.borderColor = 'var(--border)';
           }}
+          title={locale === 'en' ? 'Switch to Amharic (አማርኛ)' : 'ወደ እንግሊዝኛ ቀይር (English)'}
         >
-          <Bell size={16} color="var(--text-secondary)" />
-          {hasNotification && (
-            <span
-              style={{
-                position: 'absolute',
-                top: '8px',
-                right: '8px',
-                width: '8px',
-                height: '8px',
-                background: 'var(--danger)',
-                borderRadius: '50%',
-                border: '2px solid var(--bg-surface)',
-              }}
-            />
-          )}
+          <Languages size={15} color="var(--brand)" />
+          <span style={{
+            fontSize: '12px',
+            fontWeight: 600,
+            color: 'var(--text-secondary)',
+          }}>
+            {locale === 'en' ? 'EN' : 'አማ'}
+          </span>
         </button>
 
         {/* Avatar */}

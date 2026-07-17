@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useRole } from '@/lib/auth/RoleContext';
 import { useState, useEffect } from 'react';
+import { useTranslation } from '@/lib/contexts/LanguageContext';
 import {
   LayoutDashboard,
   FileText,
@@ -57,7 +58,13 @@ export default function Sidebar({
   const pathname = usePathname();
   const router = useRouter();
   const { user: userProfile } = useRole();
+  const { t } = useTranslation();
   const [isDark, setIsDark] = useState(false);
+
+  const getTranslationKey = (label: string) => {
+    if (label === 'Audit Logs') return 'sidebar.logs';
+    return `sidebar.${label.toLowerCase()}`;
+  };
 
   useEffect(() => {
     // Check initial theme
@@ -192,12 +199,13 @@ export default function Sidebar({
                   margin: '20px 0 6px 8px',
                 }}
               >
-                {section.label}
+                {t(`sidebar.${section.label.toLowerCase()}`, section.label)}
               </div>
             )}
             {section.items.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
+              const itemTranslation = t(getTranslationKey(item.label), item.label);
 
               return (
                 <button
@@ -234,7 +242,7 @@ export default function Sidebar({
                       e.currentTarget.style.background = 'transparent';
                     }
                   }}
-                  title={isCollapsed ? item.label : undefined}
+                  title={isCollapsed ? itemTranslation : undefined}
                 >
                   <Icon size={16} color={isActive ? 'var(--brand)' : 'var(--text-muted)'} />
                   {!isCollapsed && (
@@ -245,7 +253,7 @@ export default function Sidebar({
                         color: isActive ? 'var(--brand)' : 'var(--text-secondary)',
                       }}
                     >
-                      {item.label}
+                      {itemTranslation}
                     </span>
                   )}
                 </button>
@@ -312,7 +320,7 @@ export default function Sidebar({
               cursor: 'pointer',
               padding: 0,
             }}
-            title="View Profile"
+            title={t('header.profile_tooltip', 'View Profile')}
           >
             {userProfile?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'AD'}
           </button>
@@ -336,7 +344,7 @@ export default function Sidebar({
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'transparent';
             }}
-            title="Logout"
+            title={t('sidebar.logout', 'Logout')}
           >
             <LogOut size={14} color="var(--text-muted)" />
           </button>
@@ -366,7 +374,7 @@ export default function Sidebar({
           onMouseLeave={(e) => {
             e.currentTarget.style.background = 'var(--bg-surface)';
           }}
-          title="View Profile"
+          title={t('header.profile_tooltip', 'View Profile')}
         >
           <div style={{
             width: '36px',
@@ -415,7 +423,7 @@ export default function Sidebar({
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'transparent';
             }}
-            title="Logout"
+            title={t('sidebar.logout', 'Logout')}
           >
             <LogOut size={16} color="var(--text-muted)" />
           </button>
