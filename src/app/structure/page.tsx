@@ -22,6 +22,7 @@ import {
   Layers,
   Grid3x3,
   Square,
+  Edit,
 } from 'lucide-react';
 
 interface Room {
@@ -94,6 +95,8 @@ export default function StructurePage() {
   const [parentId, setParentId] = useState<string>('');
   const [parentRow, setParentRow] = useState<Row | null>(null); // Store the full row object
   const [formData, setFormData] = useState({ name: '', qrCode: '', position: 1 });
+  const [isEditing, setIsEditing] = useState(false);
+  const [editId, setEditId] = useState('');
   
   // Confirm delete state
   const [confirmDelete, setConfirmDelete] = useState<{
@@ -218,6 +221,28 @@ export default function StructurePage() {
     },
     onError: (error: any) => {
       const message = error.response?.data?.message || 'Failed to create item. Please try again.';
+      toast.error(message);
+    },
+  });
+
+  // Update mutations
+  const updateMutation = useMutation({
+    mutationFn: async ({ type, id, data }: { type: string; id: string; data: any }) => {
+      await apiClient.patch(`/location/${type}s/${id}`, data);
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      queryClient.invalidateQueries({ queryKey: ['shelves'] });
+      queryClient.invalidateQueries({ queryKey: ['rows'] });
+      queryClient.invalidateQueries({ queryKey: ['slots'] });
+      setModalType(null);
+      setIsEditing(false);
+      setEditId('');
+      setFormData({ name: '', qrCode: '', position: 1 });
+      toast.success(`${variables.type.charAt(0).toUpperCase() + variables.type.slice(1)} updated successfully`);
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to update item. Please try again.';
       toast.error(message);
     },
   });
@@ -398,19 +423,33 @@ export default function StructurePage() {
   };
 
   const openCreateModal = (type: ModalType, parentId: string = '') => {
+    setIsEditing(false);
     setModalType(type);
     setParentId(parentId);
     setFormData({ name: '', qrCode: '', position: 1 });
   };
 
-  const handleCreate = () => {
-    let data: any = { ...formData };
-    
-    if (modalType === 'shelf') data.roomId = parentId;
-    if (modalType === 'row') data.shelfId = parentId;
-    if (modalType === 'slot') data.rowId = parentId;
-    
-    createMutation.mutate({ type: modalType as string, data });
+  const openEditModal = (type: ModalType, id: string, name: string, qrCode: string, position: number = 1) => {
+    setIsEditing(true);
+    setModalType(type);
+    setEditId(id);
+    setFormData({ name, qrCode, position });
+  };
+
+  const handleSave = () => {
+    if (isEditing) {
+      let data: any = { name: formData.name, qrCode: formData.qrCode };
+      if (modalType !== 'room') data.position = formData.position;
+      updateMutation.mutate({ type: modalType as string, id: editId, data });
+    } else {
+      let data: any = { ...formData };
+      
+      if (modalType === 'shelf') data.roomId = parentId;
+      if (modalType === 'row') data.shelfId = parentId;
+      if (modalType === 'slot') data.rowId = parentId;
+      
+      createMutation.mutate({ type: modalType as string, data });
+    }
   };
   
   const handleBulkCreateSlots = () => {
@@ -506,36 +545,59 @@ export default function StructurePage() {
                         {room.qrCode}
                       </span>
                       {canCreate && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); openCreateModal('shelf', room.id); }}
-                          style={{
-                            padding: '4px 8px',
-                            fontSize: '12px',
-                            border: '1px solid var(--border)',
-                            borderRadius: 'var(--radius)',
-                            background: 'var(--bg-surface)',
-                            cursor: 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <Plus size={12} />
-                        </button>
+                        <>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); openEditModal('room', room.id, room.name, room.qrCode); }}
+                            style={{
+                              padding: '4px',
+                              border: 'none',
+                              background: 'transparent',
+                              cursor: 'pointer',
+                              color: 'var(--text-secondary)',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              marginRight: '2px',
+                            }}
+                            title="Edit Room"
+                          >
+                            <Edit size={14} />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); openCreateModal('shelf', room.id); }}
+                            style={{
+                              padding: '4px 8px',
+                              fontSize: '12px',
+                              border: '1px solid var(--border)',
+                              borderRadius: 'var(--radius)',
+                              background: 'var(--bg-surface)',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                            title="Add Shelf"
+                          >
+                            <Plus size={12} />
+                          </button>
+                        </>
                       )}
                       {canDelete && (
                         <button
+                          disabled={shelves.length > 0}
                           onClick={(e) => { e.stopPropagation(); handleDelete('room', room.id, room.name); }}
                           style={{
                             padding: '4px',
                             border: 'none',
                             background: 'transparent',
-                            cursor: 'pointer',
-                            color: 'var(--danger)',
+                            cursor: shelves.length > 0 ? 'not-allowed' : 'pointer',
+                            color: shelves.length > 0 ? 'var(--text-muted)' : 'var(--danger)',
+                            opacity: shelves.length > 0 ? 0.4 : 1,
                             display: 'inline-flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                           }}
+                          title={shelves.length > 0 ? "Cannot delete Room: it still contains Shelves. Delete shelves first." : "Delete Room"}
                         >
                           <Trash2 size={14} />
                         </button>
@@ -575,6 +637,23 @@ export default function StructurePage() {
                             </span>
                             {canCreate && (
                               <>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); openEditModal('shelf', shelf.id, shelf.name, shelf.qrCode, shelf.position); }}
+                                  style={{
+                                    padding: '3px',
+                                    border: 'none',
+                                    background: 'transparent',
+                                    cursor: 'pointer',
+                                    color: 'var(--text-secondary)',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    marginRight: '2px',
+                                  }}
+                                  title="Edit Shelf"
+                                >
+                                  <Edit size={12} />
+                                </button>
                                 <button
                                   onClick={(e) => { e.stopPropagation(); openCreateModal('row', shelf.id); }}
                                   style={{
@@ -620,17 +699,20 @@ export default function StructurePage() {
                             )}
                             {canDelete && (
                               <button
+                                disabled={rows.length > 0}
                                 onClick={(e) => { e.stopPropagation(); handleDelete('shelf', shelf.id, shelf.name); }}
                                 style={{
                                   padding: '3px',
                                   border: 'none',
                                   background: 'transparent',
-                                  cursor: 'pointer',
-                                  color: 'var(--danger)',
+                                  cursor: rows.length > 0 ? 'not-allowed' : 'pointer',
+                                  color: rows.length > 0 ? 'var(--text-muted)' : 'var(--danger)',
+                                  opacity: rows.length > 0 ? 0.4 : 1,
                                   display: 'inline-flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
                                 }}
+                                title={rows.length > 0 ? "Cannot delete Shelf: it still contains Rows. Delete rows first." : "Delete Shelf"}
                               >
                                 <Trash2 size={12} />
                               </button>
@@ -670,6 +752,23 @@ export default function StructurePage() {
                                   </span>
                                   {canCreate && (
                                     <>
+                                      <button
+                                        onClick={(e) => { e.stopPropagation(); openEditModal('row', row.id, row.name, row.qrCode, row.position); }}
+                                        style={{
+                                          padding: '2px',
+                                          border: 'none',
+                                          background: 'transparent',
+                                          cursor: 'pointer',
+                                          color: 'var(--text-secondary)',
+                                          display: 'inline-flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          marginRight: '2px',
+                                        }}
+                                        title="Edit Row"
+                                      >
+                                        <Edit size={11} />
+                                      </button>
                                       <button
                                         onClick={(e) => { e.stopPropagation(); openCreateModal('slot', row.id); }}
                                         style={{
@@ -716,17 +815,20 @@ export default function StructurePage() {
                                   )}
                                   {canDelete && (
                                     <button
+                                      disabled={slots.length > 0}
                                       onClick={(e) => { e.stopPropagation(); handleDelete('row', row.id, row.name); }}
                                       style={{
                                         padding: '2px',
                                         border: 'none',
                                         background: 'transparent',
-                                        cursor: 'pointer',
-                                        color: 'var(--danger)',
+                                        cursor: slots.length > 0 ? 'not-allowed' : 'pointer',
+                                        color: slots.length > 0 ? 'var(--text-muted)' : 'var(--danger)',
+                                        opacity: slots.length > 0 ? 0.4 : 1,
                                         display: 'inline-flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                       }}
+                                      title={slots.length > 0 ? "Cannot delete Row: it still contains Slots. Delete slots first." : "Delete Row"}
                                     >
                                       <Trash2 size={11} />
                                     </button>
@@ -765,19 +867,41 @@ export default function StructurePage() {
                                     <span style={{ fontSize: '9px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
                                       {slot.qrCode}
                                     </span>
-                                    {canDelete && (
+                                    {canCreate && (
                                       <button
-                                        onClick={(e) => { e.stopPropagation(); handleDelete('slot', slot.id, slot.name); }}
+                                        onClick={(e) => { e.stopPropagation(); openEditModal('slot', slot.id, slot.name, slot.qrCode, slot.position); }}
                                         style={{
                                           padding: '2px',
                                           border: 'none',
                                           background: 'transparent',
                                           cursor: 'pointer',
-                                          color: 'var(--danger)',
+                                          color: 'var(--text-secondary)',
+                                          display: 'inline-flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          marginRight: '2px',
+                                        }}
+                                        title="Edit Slot"
+                                      >
+                                        <Edit size={10} />
+                                      </button>
+                                    )}
+                                    {canDelete && (
+                                      <button
+                                        disabled={slot.boxes && slot.boxes.length > 0}
+                                        onClick={(e) => { e.stopPropagation(); handleDelete('slot', slot.id, slot.name); }}
+                                        style={{
+                                          padding: '2px',
+                                          border: 'none',
+                                          background: 'transparent',
+                                          cursor: slot.boxes && slot.boxes.length > 0 ? 'not-allowed' : 'pointer',
+                                          color: slot.boxes && slot.boxes.length > 0 ? 'var(--text-muted)' : 'var(--danger)',
+                                          opacity: slot.boxes && slot.boxes.length > 0 ? 0.4 : 1,
                                           display: 'inline-flex',
                                           alignItems: 'center',
                                           justifyContent: 'center',
                                         }}
+                                        title={slot.boxes && slot.boxes.length > 0 ? `Cannot delete Slot: it still contains box(es): ${slot.boxes.map((b: any) => b.label).join(', ')}. Move boxes first.` : "Delete Slot"}
                                       >
                                         <Trash2 size={10} />
                                       </button>
@@ -889,7 +1013,7 @@ export default function StructurePage() {
             }}
           >
             <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 600 }}>
-              Add {modalType?.charAt(0).toUpperCase() + modalType?.slice(1)}
+              {isEditing ? 'Edit' : 'Add'} {modalType?.charAt(0).toUpperCase() + modalType?.slice(1)}
             </h3>
 
             <div style={{ marginBottom: '16px' }}>
@@ -933,10 +1057,12 @@ export default function StructurePage() {
               </Button>
               <Button
                 variant="primary"
-                onClick={handleCreate}
-                disabled={createMutation.isPending || !formData.name || !formData.qrCode}
+                onClick={handleSave}
+                disabled={(isEditing ? updateMutation.isPending : createMutation.isPending) || !formData.name || !formData.qrCode}
               >
-                {createMutation.isPending ? 'Creating...' : 'Create'}
+                {isEditing 
+                  ? (updateMutation.isPending ? 'Saving...' : 'Save') 
+                  : (createMutation.isPending ? 'Creating...' : 'Create')}
               </Button>
             </div>
           </div>
