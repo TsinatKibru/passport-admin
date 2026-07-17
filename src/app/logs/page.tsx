@@ -16,6 +16,7 @@ interface LogEntry {
   action: string;
   fromLocation: string | null;
   toLocation: string | null;
+  notes?: string | null;
   createdAt: string;
   passport?: { qrCode: string; holderName: string } | null;
   box?: { qrCode: string; label: string } | null;
@@ -78,12 +79,40 @@ export default function LogsPage() {
         return 'Issued to Owner';
       case 'BOX_MOVED':
         return 'Box Relocated';
+      case 'ROOM_CREATED':
+        return 'Room Created';
+      case 'ROOM_UPDATED':
+        return 'Room Updated';
+      case 'ROOM_DELETED':
+        return 'Room Deleted';
+      case 'SHELF_CREATED':
+        return 'Shelf Created';
+      case 'SHELF_UPDATED':
+        return 'Shelf Updated';
+      case 'SHELF_DELETED':
+        return 'Shelf Deleted';
+      case 'ROW_CREATED':
+        return 'Row Created';
+      case 'ROW_UPDATED':
+        return 'Row Updated';
+      case 'ROW_DELETED':
+        return 'Row Deleted';
+      case 'SLOT_CREATED':
+        return 'Slot Created';
+      case 'SLOT_UPDATED':
+        return 'Slot Updated';
+      case 'SLOT_DELETED':
+        return 'Slot Deleted';
       default:
         return action;
     }
   };
 
   const getActionVariant = (action: string) => {
+    if (action.endsWith('_CREATED')) return 'success';
+    if (action.endsWith('_UPDATED')) return 'warning';
+    if (action.endsWith('_DELETED')) return 'danger';
+
     switch (action) {
       case 'PASSPORT_ASSIGNED':
         return 'default';
@@ -157,10 +186,26 @@ export default function LogsPage() {
               }}
             >
               <option value="">All Actions</option>
-              <option value="PASSPORT_ASSIGNED">Passport Placed (Assigned)</option>
-              <option value="PASSPORT_RETURNED">Returned to Vault</option>
-              <option value="PASSPORT_ISSUED">Issued to Owner</option>
-              <option value="BOX_MOVED">Box Relocated (Moved)</option>
+              <optgroup label="Physical Movements">
+                <option value="PASSPORT_ASSIGNED">Passport Placed (Assigned)</option>
+                <option value="PASSPORT_RETURNED">Returned to Vault</option>
+                <option value="PASSPORT_ISSUED">Issued to Owner</option>
+                <option value="BOX_MOVED">Box Relocated (Moved)</option>
+              </optgroup>
+              <optgroup label="Configuration Changes">
+                <option value="ROOM_CREATED">Room Created</option>
+                <option value="ROOM_UPDATED">Room Updated</option>
+                <option value="ROOM_DELETED">Room Deleted</option>
+                <option value="SHELF_CREATED">Shelf Created</option>
+                <option value="SHELF_UPDATED">Shelf Updated</option>
+                <option value="SHELF_DELETED">Shelf Deleted</option>
+                <option value="ROW_CREATED">Row Created</option>
+                <option value="ROW_UPDATED">Row Updated</option>
+                <option value="ROW_DELETED">Row Deleted</option>
+                <option value="SLOT_CREATED">Slot Created</option>
+                <option value="SLOT_UPDATED">Slot Updated</option>
+                <option value="SLOT_DELETED">Slot Deleted</option>
+              </optgroup>
             </select>
           </div>
 
@@ -373,6 +418,42 @@ export default function LogsPage() {
                               {log.toLocation && (
                                 <div>
                                   <span style={{ color: 'var(--text-muted)' }}>To: </span>
+                                  <span style={{ fontWeight: 500, color: 'var(--text-secondary)' }}>{log.toLocation}</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Configuration Changes (no passport & no box) */}
+                      {!log.passport && !log.box && (log.notes || log.fromLocation || log.toLocation) && (
+                        <div
+                          style={{
+                            fontSize: '13px',
+                            padding: '12px',
+                            background: 'var(--bg-subtle)',
+                            borderRadius: 'var(--radius)',
+                            border: '1px solid var(--border)',
+                            marginBottom: '12px',
+                          }}
+                        >
+                          {log.notes && (
+                            <div style={{ fontWeight: 500, color: 'var(--text-primary)', marginBottom: (log.fromLocation || log.toLocation) ? '8px' : 0 }}>
+                              {log.notes}
+                            </div>
+                          )}
+                          {(log.fromLocation || log.toLocation) && (
+                            <div style={{ fontSize: '12px', display: 'flex', flexWrap: 'wrap', gap: '16px', color: 'var(--text-muted)' }}>
+                              {log.fromLocation && (
+                                <div>
+                                  <span>Original: </span>
+                                  <span style={{ fontWeight: 500, color: 'var(--text-secondary)' }}>{log.fromLocation}</span>
+                                </div>
+                              )}
+                              {log.toLocation && (
+                                <div>
+                                  <span>Current: </span>
                                   <span style={{ fontWeight: 500, color: 'var(--text-secondary)' }}>{log.toLocation}</span>
                                 </div>
                               )}
