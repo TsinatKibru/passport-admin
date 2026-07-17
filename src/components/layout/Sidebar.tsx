@@ -126,14 +126,14 @@ export default function Sidebar({
             }}
           >
             <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-inverse)', letterSpacing: '0.04em' }}>
-              ICS
+              PSM
             </span>
           </button>
         ) : (
           <>
             <Image
-              src="/ics-logo-horizontal.png"
-              alt="ICS Logo"
+              src="/ics-logo-horizontal-v2.png"
+              alt="PSM Logo"
               width={190}
               height={36}
               style={{ objectFit: 'contain' }}
@@ -265,7 +265,7 @@ export default function Sidebar({
           marginBottom: '8px' 
         }}>
           <Image
-            src="/sidebar-decoration.png"
+            src="/sidebar-decoration-v2.png"
             alt="Branding decoration"
             width={200}
             height={180}

@@ -87,7 +87,7 @@ export default function LoginPage() {
             <Shield size={18} color="#FFFFFF" />
           </div>
           <span style={{ fontSize: '15px', fontWeight: 600, color: '#FFFFFF', letterSpacing: '0.05em' }}>
-            PASSPORTOS
+            PSM
           </span>
         </div>
 
@@ -95,8 +95,8 @@ export default function LoginPage() {
         <div style={{ zIndex: 10, maxWidth: '440px', margin: 'auto 0' }}>
           <div style={{ marginBottom: '24px' }}>
             <Image
-              src="/ics-logo.png"
-              alt="ICS Logo"
+              src="/ics-logo-horizontal.png"
+              alt="PSM Logo"
               width={160}
               height={160}
               style={{
@@ -107,7 +107,7 @@ export default function LoginPage() {
             />
           </div>
           <h2 style={{ fontSize: '32px', fontWeight: 700, color: '#FFFFFF', lineHeight: 1.2, marginBottom: '16px' }}>
-            Enterprise Ledger Portal
+            Passport Storage & Management
           </h2>
           <p style={{ fontSize: '15px', color: 'rgba(255, 255, 255, 0.7)', lineHeight: 1.6 }}>
             Logistical vault management and asset tracking system. Securely control, monitor, and audit passport movements in real-time.
@@ -128,7 +128,7 @@ export default function LoginPage() {
           }}
         >
           <Image
-            src="/sidebar-decoration.png"
+            src="/sidebar-decoration-bkp.png"
             alt="Cityscape Skyline"
             fill
             style={{ objectFit: 'cover', objectPosition: 'bottom' }}
@@ -173,7 +173,7 @@ export default function LoginPage() {
                 <Shield size={18} color="var(--text-inverse)" />
               </div>
               <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '0.05em' }}>
-                PassportOS
+                PSM
               </span>
             </div>
           </div>
