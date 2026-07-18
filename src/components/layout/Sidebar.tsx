@@ -109,7 +109,7 @@ export default function Sidebar({
       <div
         style={{
           height: '64px',
-          padding: isCollapsed ? '16px 0' : '16px 12px',
+          padding: isCollapsed ? '16px 0' : '16px 0',
           borderBottom: '1px solid var(--border)',
           display: 'flex',
           alignItems: 'center',
