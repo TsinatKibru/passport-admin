@@ -72,16 +72,16 @@ export default function Sidebar({
       const theme = document.documentElement.getAttribute('data-theme');
       setIsDark(theme === 'dark');
     };
-    
+
     checkTheme();
-    
+
     // Watch for theme changes
     const observer = new MutationObserver(checkTheme);
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ['data-theme'],
     });
-    
+
     return () => observer.disconnect();
   }, []);
 
@@ -141,9 +141,12 @@ export default function Sidebar({
             <Image
               src="/ics-logo-horizontal-v2.png"
               alt="PSM Logo"
-              width={190}
+              width={205}
               height={36}
-              style={{ objectFit: 'contain' }}
+              style={{
+                objectFit: 'contain',
+                filter: isDark ? 'brightness(0) invert(1)' : 'none'
+              }}
               priority
             />
             <button
@@ -265,20 +268,20 @@ export default function Sidebar({
 
       {/* Sidebar Decorative Image */}
       {!isCollapsed && (
-        <div style={{ 
-          padding: '2px 6px', 
-          display: 'flex', 
-          justifyContent: 'center', 
-          marginTop: 'auto', 
-          marginBottom: '8px' 
+        <div style={{
+          padding: '2px 6px',
+          display: 'flex',
+          justifyContent: 'center',
+          marginTop: 'auto',
+          marginBottom: '8px'
         }}>
           <Image
             src="/sidebar-decoration-v2.png"
             alt="Branding decoration"
             width={200}
             height={180}
-            style={{ 
-              objectFit: 'contain', 
+            style={{
+              objectFit: 'contain',
               opacity: isDark ? 0.35 : 0.8,
               mixBlendMode: isDark ? 'luminosity' : 'normal',
               filter: isDark ? 'brightness(0.9) contrast(1.1)' : 'none',
@@ -350,7 +353,7 @@ export default function Sidebar({
           </button>
         </div>
       ) : (
-        <div 
+        <div
           onClick={() => {
             router.push('/profile');
             onNavigate?.();
