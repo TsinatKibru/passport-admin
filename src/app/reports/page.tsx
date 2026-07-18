@@ -271,7 +271,7 @@ export default function ReportsPage() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))',
             gap: '16px',
             marginBottom: '24px',
           }}
@@ -378,7 +378,7 @@ export default function ReportsPage() {
       {mounted && (
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 450px), 1fr))',
           gap: '24px',
           marginBottom: '24px'
         }}>
@@ -551,7 +551,7 @@ export default function ReportsPage() {
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
             gap: '16px',
             marginTop: '8px'
           }}>
