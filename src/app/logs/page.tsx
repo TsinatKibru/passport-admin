@@ -132,7 +132,7 @@ export default function LogsPage() {
   return (
     <Shell title={t('logs.title', 'Audit Logs')} subtitle={t('logs.subtitle', 'Real-time movement ledger and system operation logs')}>
       <Card>
-        <div style={{ padding: '24px', borderBottom: '1px solid var(--border)' }}>
+        <div className="responsive-padding" style={{ borderBottom: '1px solid var(--border)' }}>
           <PageHeader
             title={t('logs.activity_timeline', 'Activity Timeline')}
             subtitle={`${totalRecords} ${t('logs.entries_found', 'log entries found')}`}
@@ -140,11 +140,10 @@ export default function LogsPage() {
         </div>
 
         {/* Filters Control Panel */}
-        <div style={{
+        <div className="responsive-padding" style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))',
           gap: '16px',
-          padding: '24px',
           background: 'var(--bg-subtle)',
           borderBottom: '1px solid var(--border)'
         }}>
@@ -187,26 +186,26 @@ export default function LogsPage() {
                 transition: 'border-color 150ms',
               }}
             >
-              <option value="">{t('logs.all_actions', 'All Actions')}</option>
-              <optgroup label={t('logs.physical_movements', 'Physical Movements')}>
-                <option value="PASSPORT_ASSIGNED">{t('logs.passport_assigned', 'Passport Placed')} ({t('passports.assign', 'Assigned')})</option>
-                <option value="PASSPORT_RETURNED">{t('logs.passport_returned', 'Returned to Vault')}</option>
-                <option value="PASSPORT_ISSUED">{t('logs.passport_issued', 'Issued to Owner')}</option>
-                <option value="BOX_MOVED">{t('logs.box_moved', 'Box Relocated')} ({t('passports.action_move', 'Moved')})</option>
+              <option style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }} value="">{t('logs.all_actions', 'All Actions')}</option>
+              <optgroup style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }} label={t('logs.physical_movements', 'Physical Movements')}>
+                <option style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }} value="PASSPORT_ASSIGNED">{t('logs.passport_assigned', 'Passport Placed')} ({t('passports.assign', 'Assigned')})</option>
+                <option style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }} value="PASSPORT_RETURNED">{t('logs.passport_returned', 'Returned to Vault')}</option>
+                <option style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }} value="PASSPORT_ISSUED">{t('logs.passport_issued', 'Issued to Owner')}</option>
+                <option style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }} value="BOX_MOVED">{t('logs.box_moved', 'Box Relocated')} ({t('passports.action_move', 'Moved')})</option>
               </optgroup>
-              <optgroup label={t('logs.config_changes', 'Configuration Changes')}>
-                <option value="ROOM_CREATED">{t('logs.room_created', 'Room Created')}</option>
-                <option value="ROOM_UPDATED">{t('logs.room_updated', 'Room Updated')}</option>
-                <option value="ROOM_DELETED">{t('logs.room_deleted', 'Room Deleted')}</option>
-                <option value="SHELF_CREATED">{t('logs.shelf_created', 'Shelf Created')}</option>
-                <option value="SHELF_UPDATED">{t('logs.shelf_updated', 'Shelf Updated')}</option>
-                <option value="SHELF_DELETED">{t('logs.shelf_deleted', 'Shelf Deleted')}</option>
-                <option value="ROW_CREATED">{t('logs.row_created', 'Row Created')}</option>
-                <option value="ROW_UPDATED">{t('logs.row_updated', 'Row Updated')}</option>
-                <option value="ROW_DELETED">{t('logs.row_deleted', 'Row Deleted')}</option>
-                <option value="SLOT_CREATED">{t('logs.slot_created', 'Slot Created')}</option>
-                <option value="SLOT_UPDATED">{t('logs.slot_updated', 'Slot Updated')}</option>
-                <option value="SLOT_DELETED">{t('logs.slot_deleted', 'Slot Deleted')}</option>
+              <optgroup style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }} label={t('logs.config_changes', 'Configuration Changes')}>
+                <option style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }} value="ROOM_CREATED">{t('logs.room_created', 'Room Created')}</option>
+                <option style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }} value="ROOM_UPDATED">{t('logs.room_updated', 'Room Updated')}</option>
+                <option style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }} value="ROOM_DELETED">{t('logs.room_deleted', 'Room Deleted')}</option>
+                <option style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }} value="SHELF_CREATED">{t('logs.shelf_created', 'Shelf Created')}</option>
+                <option style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }} value="SHELF_UPDATED">{t('logs.shelf_updated', 'Shelf Updated')}</option>
+                <option style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }} value="SHELF_DELETED">{t('logs.shelf_deleted', 'Shelf Deleted')}</option>
+                <option style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }} value="ROW_CREATED">{t('logs.row_created', 'Row Created')}</option>
+                <option style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }} value="ROW_UPDATED">{t('logs.row_updated', 'Row Updated')}</option>
+                <option style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }} value="ROW_DELETED">{t('logs.row_deleted', 'Row Deleted')}</option>
+                <option style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }} value="SLOT_CREATED">{t('logs.slot_created', 'Slot Created')}</option>
+                <option style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }} value="SLOT_UPDATED">{t('logs.slot_updated', 'Slot Updated')}</option>
+                <option style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)' }} value="SLOT_DELETED">{t('logs.slot_deleted', 'Slot Deleted')}</option>
               </optgroup>
             </select>
           </div>
@@ -253,7 +252,7 @@ export default function LogsPage() {
           </div>
         </div>
 
-        <div style={{ padding: '24px' }}>
+        <div className="responsive-padding">
           {/* Timeline Feed */}
           {isLoading ? (
             <div style={{ textAlign: 'center', padding: '48px 24px', color: 'var(--text-muted)' }}>
@@ -263,16 +262,7 @@ export default function LogsPage() {
             <div style={{ position: 'relative' }}>
               {/* Vertical Line */}
               {logs.length > 0 && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: '20px',
-                    top: '8px',
-                    bottom: '8px',
-                    width: '2px',
-                    background: 'var(--border)',
-                  }}
-                />
+                <div className="timeline-line" />
               )}
 
               {/* Log Entries */}
@@ -280,24 +270,13 @@ export default function LogsPage() {
                 {logs.map((log, index) => (
                   <div
                     key={log.id}
-                    style={{
-                      paddingLeft: '52px',
-                      position: 'relative',
-                    }}
+                    className="timeline-item"
                   >
                     {/* Timeline Dot */}
                     <div
+                      className="timeline-dot"
                       style={{
-                        position: 'absolute',
-                        left: '12px',
-                        top: '12px',
-                        width: '18px',
-                        height: '18px',
-                        borderRadius: '50%',
                         background: index === 0 ? 'var(--brand)' : 'var(--bg-subtle)',
-                        border: '3px solid var(--bg-surface)',
-                        boxShadow: '0 0 0 1px var(--border)',
-                        transition: 'all 200ms',
                       }}
                     />
 
@@ -465,10 +444,10 @@ export default function LogsPage() {
                       )}
 
                       {/* Operator Info */}
-                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4px' }}>
                         <span>{t('logs.performed_by', 'Performed by:')}</span>
                         <strong style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>{log.user.name}</strong>
-                        <span>({log.user.email})</span>
+                        <span style={{ wordBreak: 'break-all' }}>({log.user.email})</span>
                       </div>
                     </div>
                   </div>

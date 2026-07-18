@@ -113,3 +113,68 @@ body {
     padding: 24px;
   }
 }
+
+/* Responsive split grid for layout pages */
+.responsive-split-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 1025px) {
+  .responsive-split-grid {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+/* Responsive padding for card containers and sections */
+.responsive-padding {
+  padding: 16px;
+}
+
+@media (min-width: 769px) {
+  .responsive-padding {
+    padding: 24px;
+  }
+}
+
+/* Timeline component responsive styling */
+.timeline-line {
+  position: absolute;
+  left: 12px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: var(--border);
+}
+
+.timeline-item {
+  padding-left: 32px;
+  position: relative;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: 4px;
+  top: 12px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 3px solid var(--bg-surface);
+  box-shadow: 0 0 0 1px var(--border);
+  transition: all 200ms;
+}
+
+@media (min-width: 769px) {
+  .timeline-line {
+    left: 20px;
+  }
+  .timeline-item {
+    padding-left: 52px;
+  }
+  .timeline-dot {
+    left: 12px;
+  }
+}
+
+

@@ -13,6 +13,8 @@ export function PageHeader({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '16px',
         marginBottom: '24px',
       }}
     >

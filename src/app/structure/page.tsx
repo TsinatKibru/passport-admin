@@ -508,7 +508,7 @@ export default function StructurePage() {
 
   return (
     <Shell title={t('structure.title', 'Physical Structure Layout')} subtitle={t('structure.subtitle', 'Configure rooms, shelves, rows and slots')}>
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+      <div className="responsive-split-grid">
         {/* Left: Expandable Tree */}
         <Card>
           <PageHeader
@@ -1433,7 +1433,7 @@ export default function StructurePage() {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 120px), 1fr))', gap: '12px', marginBottom: '16px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '13px', marginBottom: '6px', fontWeight: 500 }}>
                   {t('structure.start_number', 'Start Number')}
