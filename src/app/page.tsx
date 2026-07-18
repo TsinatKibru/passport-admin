@@ -259,6 +259,7 @@ export default function Dashboard() {
                     <Tooltip
                       contentStyle={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)' }}
                       labelStyle={{ fontWeight: 600, color: 'var(--text-primary)' }}
+                      cursor={{ fill: 'var(--bg-subtle)', opacity: 0.15 }}
                     />
                     <Legend wrapperStyle={{ fontSize: 11, paddingTop: 5 }} />
                     <Bar name="Occupied Slots" dataKey="occupied" fill="var(--brand)" radius={[4, 4, 0, 0]} maxBarSize={25} />
