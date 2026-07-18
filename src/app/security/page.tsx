@@ -13,6 +13,7 @@ import toast from 'react-hot-toast';
 import { apiClient } from '@/lib/api/client';
 import { Check, X, Shield, Users, UserPlus, Trash2, Power, Search, Activity } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from '@/lib/contexts/LanguageContext';
 
 interface User {
   id: string;
@@ -36,6 +37,7 @@ interface UserStats {
 }
 
 export default function SecurityPage() {
+  const { t } = useTranslation();
   const { isAdmin, isLoading: roleLoading, user: currentUser } = useRole();
   const queryClient = useQueryClient();
 
@@ -96,11 +98,11 @@ export default function SecurityPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       queryClient.invalidateQueries({ queryKey: ['user-stats'] });
-      toast.success('User created successfully');
+      toast.success(t('security.toast_create_success', 'User created successfully'));
       setCreateUserModalOpen(false);
     },
     onError: (error: any) => {
-      const message = error.response?.data?.message || 'Failed to create user';
+      const message = error.response?.data?.message || t('security.toast_create_fail', 'Failed to create user');
       toast.error(message);
     },
   });
@@ -112,10 +114,13 @@ export default function SecurityPage() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       queryClient.invalidateQueries({ queryKey: ['user-stats'] });
-      toast.success(`User role changed to ${variables.newRole} successfully`);
+      toast.success(
+        t('security.toast_role_success', 'User role changed to {role} successfully')
+          .replace('{role}', variables.newRole)
+      );
     },
     onError: (error: any) => {
-      const message = error.response?.data?.message || 'Failed to change user role';
+      const message = error.response?.data?.message || t('security.toast_role_fail', 'Failed to change user role');
       toast.error(message);
     },
   });
@@ -127,10 +132,10 @@ export default function SecurityPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       queryClient.invalidateQueries({ queryKey: ['user-stats'] });
-      toast.success('User status updated successfully');
+      toast.success(t('security.toast_status_success', 'User status updated successfully'));
     },
     onError: (error: any) => {
-      const message = error.response?.data?.message || 'Failed to update user status';
+      const message = error.response?.data?.message || t('security.toast_status_fail', 'Failed to update user status');
       toast.error(message);
     },
   });
@@ -142,10 +147,10 @@ export default function SecurityPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       queryClient.invalidateQueries({ queryKey: ['user-stats'] });
-      toast.success('User deleted successfully');
+      toast.success(t('security.toast_delete_success', 'User deleted successfully'));
     },
     onError: (error: any) => {
-      const message = error.response?.data?.message || 'Failed to delete user';
+      const message = error.response?.data?.message || t('security.toast_delete_fail', 'Failed to delete user');
       toast.error(message);
     },
   });
@@ -186,26 +191,26 @@ export default function SecurityPage() {
   };
 
   const rbacMatrix = [
-    { action: 'Create/Delete Physical Locations (Room, Shelf, Row, Slot)', admin: true, staff: false },
-    { action: 'Register Passports', admin: true, staff: false },
-    { action: 'Register & Assign Movable Boxes', admin: true, staff: false },
-    { action: 'Issue Passports to Owners', admin: true, staff: true },
-    { action: 'Assign/Move Passports Between Boxes', admin: true, staff: true },
-    { action: 'View Audit Trails & System Logs', admin: true, staff: true },
-    { action: 'Delete Boxes/Passports/Locations', admin: true, staff: false },
-    { action: 'Manage Users & Roles', admin: true, staff: false },
+    { key: 'security.action_physical_locations', action: 'Create/Delete Physical Locations (Room, Shelf, Row, Slot)', admin: true, staff: false },
+    { key: 'security.action_register_passports', action: 'Register Passports', admin: true, staff: false },
+    { key: 'security.action_register_boxes', action: 'Register & Assign Movable Boxes', admin: true, staff: false },
+    { key: 'security.action_issue_passports', action: 'Issue Passports to Owners', admin: true, staff: true },
+    { key: 'security.action_move_passports', action: 'Assign/Move Passports Between Boxes', admin: true, staff: true },
+    { key: 'security.action_view_audit', action: 'View Audit Trails & System Logs', admin: true, staff: true },
+    { key: 'security.action_delete_entities', action: 'Delete Boxes/Passports/Locations', admin: true, staff: false },
+    { key: 'security.action_manage_users', action: 'Manage Users & Roles', admin: true, staff: false },
   ];
 
   if (roleLoading) {
     return (
-      <Shell title="Security & Access Control" subtitle="Loading...">
-        <div style={{ padding: '24px' }}>Loading...</div>
+      <Shell title={t('security.title', 'Security & Access Control')} subtitle={t('security.loading', 'Loading...')}>
+        <div style={{ padding: '24px' }}>{t('security.loading', 'Loading...')}</div>
       </Shell>
     );
   }
 
   return (
-    <Shell title="Security & Access Control" subtitle="Role-based permissions and user management">
+    <Shell title={t('security.title', 'Security & Access Control')} subtitle={t('security.subtitle', 'Role-based permissions and user management')}>
       <div style={{ padding: '24px', maxWidth: '1400px' }}>
         {isAdmin && stats && (
           <div style={{ 
@@ -229,7 +234,7 @@ export default function SecurityPage() {
                       {stats.totalUsers}
                     </div>
                     <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                      Total Users
+                      {t('security.total_users', 'Total Users')}
                     </div>
                   </div>
                 </div>
@@ -251,7 +256,7 @@ export default function SecurityPage() {
                       {stats.activeUsers}
                     </div>
                     <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                      Active Users
+                      {t('security.active_users', 'Active Users')}
                     </div>
                   </div>
                 </div>
@@ -273,7 +278,7 @@ export default function SecurityPage() {
                       {stats.adminCount}
                     </div>
                     <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                      Administrators
+                      {t('security.administrators', 'Administrators')}
                     </div>
                   </div>
                 </div>
@@ -295,7 +300,7 @@ export default function SecurityPage() {
                       {stats.staffCount}
                     </div>
                     <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                      Staff Members
+                      {t('security.staff_members', 'Staff Members')}
                     </div>
                   </div>
                 </div>
@@ -312,10 +317,10 @@ export default function SecurityPage() {
                 margin: 0, display: 'flex', alignItems: 'center', gap: '8px',
               }}>
                 <Shield size={18} />
-                RBAC Permission Matrix
+                {t('security.rbac_matrix', 'RBAC Permission Matrix')}
               </h3>
               <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '4px 0 0 26px' }}>
-                System-wide security policy for all operational actions
+                {t('security.rbac_subtitle', 'System-wide security policy for all operational actions')}
               </p>
             </div>
             <div style={{ overflowX: 'auto' }}>
@@ -326,19 +331,19 @@ export default function SecurityPage() {
                       padding: '12px 16px', textAlign: 'left', fontSize: '13px', 
                       fontWeight: 600, color: 'var(--text-secondary)',
                     }}>
-                      Operational Actions
+                      {t('security.operational_actions', 'Operational Actions')}
                     </th>
                     <th style={{ 
                       padding: '12px 16px', textAlign: 'center', fontSize: '13px', 
                       fontWeight: 600, color: 'var(--text-secondary)', width: '120px',
                     }}>
-                      Admin
+                      {t('security.admin_role', 'Admin')}
                     </th>
                     <th style={{ 
                       padding: '12px 16px', textAlign: 'center', fontSize: '13px', 
                       fontWeight: 600, color: 'var(--text-secondary)', width: '120px',
                     }}>
-                      Staff
+                      {t('security.staff_role', 'Staff')}
                     </th>
                   </tr>
                 </thead>
@@ -346,7 +351,7 @@ export default function SecurityPage() {
                   {rbacMatrix.map((row, idx) => (
                     <tr key={idx} style={{ borderBottom: '1px solid var(--border)' }}>
                       <td style={{ padding: '12px 16px', fontSize: '13px', color: 'var(--text-primary)' }}>
-                        {row.action}
+                        {t(row.key, row.action)}
                       </td>
                       <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                         {row.admin ? (
@@ -404,15 +409,15 @@ export default function SecurityPage() {
                     margin: 0, display: 'flex', alignItems: 'center', gap: '8px',
                   }}>
                     <Users size={18} />
-                    User Management
+                    {t('security.user_management', 'User Management')}
                   </h3>
                   <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '4px 0 0 26px' }}>
-                    Manage system operator accounts and role assignments
+                    {t('security.user_management_subtitle', 'Manage system operator accounts and role assignments')}
                   </p>
                 </div>
                 <Button variant="primary" onClick={() => setCreateUserModalOpen(true)}>
                   <UserPlus size={16} style={{ marginRight: '6px' }} />
-                  Create User
+                  {t('security.create_user_btn', 'Create User')}
                 </Button>
               </div>
 
@@ -427,7 +432,7 @@ export default function SecurityPage() {
                   />
                   <Input
                     type="text"
-                    placeholder="Search users by name or email..."
+                    placeholder={t('security.search_placeholder', 'Search users by name or email...')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     style={{ paddingLeft: '40px' }}
@@ -439,33 +444,33 @@ export default function SecurityPage() {
             <div style={{ overflowX: 'auto' }}>
               {usersLoading ? (
                 <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                  Loading users...
+                  {t('security.loading_users', 'Loading users...')}
                 </div>
               ) : filteredUsers.length === 0 ? (
                 <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                  {searchQuery ? 'No users found matching your search' : 'No users found'}
+                  {searchQuery ? t('security.no_users_matching', 'No users found matching your search') : t('security.no_users_found', 'No users found')}
                 </div>
               ) : (
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: 'var(--bg-subtle)', borderBottom: '1px solid var(--border)' }}>
                       <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                        User
+                        {t('security.table_user', 'User')}
                       </th>
                       <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                        Email
+                        {t('security.table_email', 'Email')}
                       </th>
                       <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', width: '100px' }}>
-                        Status
+                        {t('security.table_status', 'Status')}
                       </th>
                       <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', width: '120px' }}>
-                        Role
+                        {t('security.table_role', 'Role')}
                       </th>
                       <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', width: '100px' }}>
-                        Activity
+                        {t('security.table_activity', 'Activity')}
                       </th>
                       <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', width: '200px' }}>
-                        Actions
+                        {t('security.table_actions', 'Actions')}
                       </th>
                     </tr>
                   </thead>
@@ -489,7 +494,7 @@ export default function SecurityPage() {
                                 {user.name}
                                 {currentUser?.id === user.id && (
                                   <span style={{ marginLeft: '6px', fontSize: '11px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                                    (You)
+                                    {t('security.current_user_indicator', '(You)')}
                                   </span>
                                 )}
                               </div>
@@ -501,7 +506,7 @@ export default function SecurityPage() {
                         </td>
                         <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                           <Badge variant={user.isActive ? 'success' : 'danger'}>
-                            {user.isActive ? 'Active' : 'Inactive'}
+                            {user.isActive ? t('security.status_active', 'Active') : t('security.status_inactive', 'Inactive')}
                           </Badge>
                         </td>
                         <td style={{ padding: '12px 16px', textAlign: 'center' }}>
@@ -526,7 +531,7 @@ export default function SecurityPage() {
                           )}
                         </td>
                         <td style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', color: 'var(--text-muted)' }}>
-                          {user._count?.movementLogs || 0} logs
+                          {t('security.logs_count', '{count} logs').replace('{count}', String(user._count?.movementLogs || 0))}
                         </td>
                         <td style={{ padding: '12px 16px' }}>
                           <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
@@ -552,7 +557,7 @@ export default function SecurityPage() {
                             )}
                             {currentUser?.id === user.id && (
                               <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                                Cannot modify own account
+                                {t('security.cannot_modify_own', 'Cannot modify own account')}
                               </span>
                             )}
                           </div>
@@ -571,7 +576,7 @@ export default function SecurityPage() {
             <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
               <Shield size={48} color="var(--text-muted)" style={{ marginBottom: '12px' }} />
               <p style={{ fontSize: '14px', margin: 0 }}>
-                User management is only accessible to administrators.
+                {t('security.admin_only_msg', 'User management is only accessible to administrators.')}
               </p>
             </div>
           </Card>
@@ -589,9 +594,9 @@ export default function SecurityPage() {
         isOpen={confirmRoleChange.isOpen}
         onClose={() => setConfirmRoleChange({ isOpen: false, userId: '', newRole: 'STAFF' })}
         onConfirm={confirmRoleChangeAction}
-        title="Confirm Role Change"
-        message={`Are you sure you want to change this user's role to ${confirmRoleChange.newRole}?`}
-        confirmText="Change Role"
+        title={t('security.confirm_role_title', 'Confirm Role Change')}
+        message={t('security.confirm_role_msg', "Are you sure you want to change this user's role to {role}?").replace('{role}', confirmRoleChange.newRole)}
+        confirmText={t('security.change_role_btn', 'Change Role')}
         variant="primary"
         isLoading={changeRoleMutation.isPending}
       />
@@ -600,9 +605,11 @@ export default function SecurityPage() {
         isOpen={confirmToggleStatus.isOpen}
         onClose={() => setConfirmToggleStatus({ isOpen: false, userId: '', userName: '', currentStatus: false })}
         onConfirm={confirmToggleStatusAction}
-        title={`${confirmToggleStatus.currentStatus ? 'Deactivate' : 'Activate'} User`}
-        message={`Are you sure you want to ${confirmToggleStatus.currentStatus ? 'deactivate' : 'activate'} ${confirmToggleStatus.userName}?`}
-        confirmText={confirmToggleStatus.currentStatus ? 'Deactivate' : 'Activate'}
+        title={t('security.toggle_status_title', '{status} User').replace('{status}', confirmToggleStatus.currentStatus ? t('security.deactivate', 'Deactivate') : t('security.activate', 'Activate'))}
+        message={t('security.toggle_status_msg', 'Are you sure you want to {action} {name}?')
+          .replace('{action}', confirmToggleStatus.currentStatus ? t('security.deactivate_action', 'deactivate') : t('security.activate_action', 'activate'))
+          .replace('{name}', confirmToggleStatus.userName)}
+        confirmText={confirmToggleStatus.currentStatus ? t('security.deactivate', 'Deactivate') : t('security.activate', 'Activate')}
         variant={confirmToggleStatus.currentStatus ? 'danger' : 'primary'}
         isLoading={toggleStatusMutation.isPending}
       />
@@ -611,9 +618,9 @@ export default function SecurityPage() {
         isOpen={confirmDelete.isOpen}
         onClose={() => setConfirmDelete({ isOpen: false, userId: '', userName: '' })}
         onConfirm={confirmDeleteAction}
-        title="Delete User"
-        message={`Are you sure you want to permanently delete ${confirmDelete.userName}? This action cannot be undone.`}
-        confirmText="Delete User"
+        title={t('security.delete_user_title', 'Delete User')}
+        message={t('security.delete_user_msg', 'Are you sure you want to permanently delete {name}? This action cannot be undone.').replace('{name}', confirmDelete.userName)}
+        confirmText={t('security.delete_user_confirm', 'Delete User')}
         variant="danger"
         isLoading={deleteUserMutation.isPending}
       />

@@ -12,9 +12,11 @@ import { Badge } from '@/components/ui/Badge';
 import { User, Mail, Shield, Lock, AlertCircle, CheckCircle, Calendar } from 'lucide-react';
 import { apiClient } from '@/lib/api/client';
 import { useRole } from '@/lib/auth/RoleContext';
+import { useTranslation } from '@/lib/contexts/LanguageContext';
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { t, locale } = useTranslation();
   const { user: profile, isLoading: loading, refetch: refetchProfile } = useRole();
   const [changingPassword, setChangingPassword] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
@@ -45,11 +47,11 @@ export default function ProfilePage() {
       await apiClient.put(`/auth/users/${profile.id}`, {
         name: editForm.name,
       });
-      toast.success('Profile details updated successfully');
+      toast.success(t('profile.toast_details_success', 'Profile details updated successfully'));
       await refetchProfile();
       setIsEditingDetails(false);
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to update profile details';
+      const message = error.response?.data?.message || t('profile.toast_details_fail', 'Failed to update profile details');
       toast.error(message);
     } finally {
       setSavingDetails(false);
@@ -60,29 +62,29 @@ export default function ProfilePage() {
     const newErrors: Record<string, string> = {};
 
     if (!passwordForm.currentPassword) {
-      newErrors.currentPassword = 'Current password is required';
+      newErrors.currentPassword = t('profile.err_current_required', 'Current password is required');
     }
 
     if (!passwordForm.newPassword) {
-      newErrors.newPassword = 'New password is required';
+      newErrors.newPassword = t('profile.err_new_required', 'New password is required');
     } else if (passwordForm.newPassword.length < 8) {
-      newErrors.newPassword = 'Password must be at least 8 characters';
+      newErrors.newPassword = t('profile.err_len_min', 'Password must be at least 8 characters');
     } else if (!/[A-Z]/.test(passwordForm.newPassword)) {
-      newErrors.newPassword = 'Password must contain at least one uppercase letter';
+      newErrors.newPassword = t('profile.err_uppercase', 'Password must contain at least one uppercase letter');
     } else if (!/[a-z]/.test(passwordForm.newPassword)) {
-      newErrors.newPassword = 'Password must contain at least one lowercase letter';
+      newErrors.newPassword = t('profile.err_lowercase', 'Password must contain at least one lowercase letter');
     } else if (!/\d/.test(passwordForm.newPassword)) {
-      newErrors.newPassword = 'Password must contain at least one number';
+      newErrors.newPassword = t('profile.err_number', 'Password must contain at least one number');
     } else if (!/[@$!%*?&]/.test(passwordForm.newPassword)) {
-      newErrors.newPassword = 'Password must contain at least one special character';
+      newErrors.newPassword = t('profile.err_special', 'Password must contain at least one special character');
     }
 
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = t('profile.err_mismatch', 'Passwords do not match');
     }
 
     if (passwordForm.currentPassword === passwordForm.newPassword) {
-      newErrors.newPassword = 'New password must be different from current password';
+      newErrors.newPassword = t('profile.err_must_differ', 'New password must be different from current password');
     }
 
     setErrors(newErrors);
@@ -104,7 +106,7 @@ export default function ProfilePage() {
         newPassword: passwordForm.newPassword,
       });
 
-      toast.success('Password changed successfully');
+      toast.success(t('profile.toast_password_success', 'Password changed successfully'));
       setShowPasswordForm(false);
       setPasswordForm({
         currentPassword: '',
@@ -113,7 +115,7 @@ export default function ProfilePage() {
       });
       setErrors({});
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to change password';
+      const message = error.response?.data?.message || t('profile.toast_password_fail', 'Failed to change password');
       toast.error(message);
       if (message.includes('Current password')) {
         setErrors({ currentPassword: message });
@@ -134,21 +136,21 @@ export default function ProfilePage() {
     if (/\d/.test(password)) strength += 1;
     if (/[@$!%*?&]/.test(password)) strength += 1;
 
-    if (strength <= 2) return { strength, label: 'Weak', color: 'var(--danger)' };
-    if (strength <= 3) return { strength, label: 'Fair', color: 'var(--warning)' };
-    if (strength <= 4) return { strength, label: 'Good', color: 'var(--brand)' };
-    return { strength, label: 'Strong', color: 'var(--success)' };
+    if (strength <= 2) return { strength, label: t('profile.strength_weak', 'Weak'), color: 'var(--danger)' };
+    if (strength <= 3) return { strength, label: t('profile.strength_fair', 'Fair'), color: 'var(--warning)' };
+    if (strength <= 4) return { strength, label: t('profile.strength_good', 'Good'), color: 'var(--brand)' };
+    return { strength, label: t('profile.strength_strong', 'Strong'), color: 'var(--success)' };
   };
 
   const passwordStrength = getPasswordStrength();
 
   if (loading) {
     return (
-      <Shell title="Profile">
+      <Shell title={t('sidebar.profile', 'Profile')}>
         <Card>
           <div style={{ textAlign: 'center', padding: '48px 24px', color: 'var(--text-muted)' }}>
             <User size={48} style={{ margin: '0 auto 12px', opacity: 0.3 }} />
-            <p>Loading profile...</p>
+            <p>{t('profile.loading', 'Loading profile...')}</p>
           </div>
         </Card>
       </Shell>
@@ -157,11 +159,11 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <Shell title="Profile">
+      <Shell title={t('sidebar.profile', 'Profile')}>
         <Card>
           <div style={{ textAlign: 'center', padding: '48px 24px' }}>
             <AlertCircle size={48} color="var(--danger)" style={{ margin: '0 auto 12px' }} />
-            <p>Failed to load profile</p>
+            <p>{t('profile.failed_load', 'Failed to load profile')}</p>
           </div>
         </Card>
       </Shell>
@@ -169,21 +171,21 @@ export default function ProfilePage() {
   }
 
   return (
-    <Shell title="Profile">
+    <Shell title={t('sidebar.profile', 'Profile')}>
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
         {/* Profile Information Card */}
         <div style={{ marginBottom: '24px' }}>
           <Card>
           <PageHeader
-            title="Profile Information"
-            subtitle="View and manage your account details"
+            title={t('profile.info_title', 'Profile Information')}
+            subtitle={t('profile.info_subtitle', 'View and manage your account details')}
             action={
               profile.role === 'ADMIN' && !isEditingDetails && (
                 <Button variant="secondary" size="sm" onClick={() => {
                   setEditForm({ name: profile.name, email: profile.email });
                   setIsEditingDetails(true);
                 }}>
-                  Edit Details
+                  {t('profile.edit_details', 'Edit Details')}
                 </Button>
               )
             }
@@ -219,7 +221,7 @@ export default function ProfilePage() {
                     </span>
                   </Badge>
                   <Badge variant={profile.isActive ? 'success' : 'danger'}>
-                    {profile.isActive ? 'Active' : 'Inactive'}
+                    {profile.isActive ? t('profile.status_active', 'Active') : t('profile.status_inactive', 'Inactive')}
                   </Badge>
                 </div>
               </div>
@@ -231,7 +233,7 @@ export default function ProfilePage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '24px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--text-primary)', marginBottom: '6px' }}>
-                      Full Name
+                      {t('profile.full_name', 'Full Name')}
                     </label>
                     <Input
                       value={editForm.name}
@@ -241,7 +243,7 @@ export default function ProfilePage() {
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--text-muted)', marginBottom: '6px' }}>
-                      Email Address
+                      {t('profile.email', 'Email Address')}
                     </label>
                     <Input
                       type="email"
@@ -250,7 +252,7 @@ export default function ProfilePage() {
                       style={{ background: 'var(--bg-subtle)', color: 'var(--text-muted)', cursor: 'not-allowed' }}
                     />
                     <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                      Email address cannot be changed.
+                      {t('profile.email_immutable', 'Email address cannot be changed.')}
                     </span>
                   </div>
                 </div>
@@ -261,14 +263,14 @@ export default function ProfilePage() {
                     onClick={() => setIsEditingDetails(false)}
                     disabled={savingDetails}
                   >
-                    Cancel
+                    {t('profile.cancel', 'Cancel')}
                   </Button>
                   <Button
                     type="submit"
                     variant="primary"
                     disabled={savingDetails}
                   >
-                    {savingDetails ? 'Saving...' : 'Save Changes'}
+                    {savingDetails ? t('profile.saving', 'Saving...') : t('profile.save_changes', 'Save Changes')}
                   </Button>
                 </div>
               </form>
@@ -277,7 +279,7 @@ export default function ProfilePage() {
                 <div>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 500, color: 'var(--text-muted)', marginBottom: '8px' }}>
                     <Mail size={14} />
-                    Email Address
+                    {t('profile.email', 'Email Address')}
                   </label>
                   <p style={{ fontSize: '15px', color: 'var(--text-primary)', fontWeight: 500 }}>
                     {profile.email}
@@ -287,7 +289,7 @@ export default function ProfilePage() {
                 <div>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 500, color: 'var(--text-muted)', marginBottom: '8px' }}>
                     <User size={14} />
-                    User ID
+                    {t('profile.user_id', 'User ID')}
                   </label>
                   <p style={{ fontSize: '11px', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
                     {profile.id}
@@ -297,10 +299,10 @@ export default function ProfilePage() {
                 <div>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 500, color: 'var(--text-muted)', marginBottom: '8px' }}>
                     <Calendar size={14} />
-                    Member Since
+                    {t('profile.member_since', 'Member Since')}
                   </label>
                   <p style={{ fontSize: '15px', color: 'var(--text-primary)' }}>
-                    {new Date(profile.createdAt).toLocaleDateString('en-US', {
+                    {new Date(profile.createdAt).toLocaleDateString(locale === 'am' ? 'am-ET' : 'en-US', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric'
@@ -319,16 +321,16 @@ export default function ProfilePage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
-                  Password & Security
+                  {t('profile.password_security', 'Password & Security')}
                 </h3>
                 <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                  Manage your password and account security
+                  {t('profile.password_subtitle', 'Manage your password and account security')}
                 </p>
               </div>
               {!showPasswordForm && (
                 <Button variant="secondary" onClick={() => setShowPasswordForm(true)}>
                   <Lock size={14} style={{ marginRight: '6px' }} />
-                  Change Password
+                  {t('profile.change_password_btn', 'Change Password')}
                 </Button>
               )}
             </div>
@@ -339,11 +341,11 @@ export default function ProfilePage() {
               <form onSubmit={handleChangePassword}>
                 <div style={{ marginBottom: '20px' }}>
                   <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px', color: 'var(--text-primary)' }}>
-                    Current Password
+                    {t('profile.current_password', 'Current Password')}
                   </label>
                   <Input
                     type="password"
-                    placeholder="Enter current password"
+                    placeholder={t('profile.current_password_placeholder', 'Enter current password')}
                     value={passwordForm.currentPassword}
                     onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
                     disabled={changingPassword}
@@ -357,11 +359,11 @@ export default function ProfilePage() {
 
                 <div style={{ marginBottom: '20px' }}>
                   <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px', color: 'var(--text-primary)' }}>
-                    New Password
+                    {t('profile.new_password', 'New Password')}
                   </label>
                   <Input
                     type="password"
-                    placeholder="Enter new password"
+                    placeholder={t('profile.new_password_placeholder', 'Enter new password')}
                     value={passwordForm.newPassword}
                     onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
                     disabled={changingPassword}
@@ -369,7 +371,7 @@ export default function ProfilePage() {
                   {passwordForm.newPassword && (
                     <div style={{ marginTop: '8px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Password strength:</span>
+                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{t('profile.password_strength', 'Password strength:')}</span>
                         <span style={{ fontSize: '12px', fontWeight: 600, color: passwordStrength.color }}>
                           {passwordStrength.label}
                         </span>
@@ -390,17 +392,17 @@ export default function ProfilePage() {
                     </div>
                   )}
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px' }}>
-                    Must be 8+ characters with uppercase, lowercase, number, and special character
+                    {t('profile.password_rules', 'Must be 8+ characters with uppercase, lowercase, number, and special character')}
                   </div>
                 </div>
 
                 <div style={{ marginBottom: '24px' }}>
                   <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px', color: 'var(--text-primary)' }}>
-                    Confirm New Password
+                    {t('profile.confirm_password', 'Confirm New Password')}
                   </label>
                   <Input
                     type="password"
-                    placeholder="Confirm new password"
+                    placeholder={t('profile.confirm_password_placeholder', 'Confirm new password')}
                     value={passwordForm.confirmPassword}
                     onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
                     disabled={changingPassword}
@@ -423,14 +425,14 @@ export default function ProfilePage() {
                     }}
                     disabled={changingPassword}
                   >
-                    Cancel
+                    {t('profile.cancel', 'Cancel')}
                   </Button>
                   <Button
                     type="submit"
                     variant="primary"
                     disabled={changingPassword}
                   >
-                    {changingPassword ? 'Changing Password...' : 'Change Password'}
+                    {changingPassword ? t('profile.changing_password', 'Changing Password...') : t('profile.change_password_btn', 'Change Password')}
                   </Button>
                 </div>
               </form>
@@ -443,10 +445,10 @@ export default function ProfilePage() {
                 <CheckCircle size={20} color="var(--success)" style={{ flexShrink: 0 }} />
                 <div>
                   <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '2px' }}>
-                    Password Protection Active
+                    {t('profile.password_active', 'Password Protection Active')}
                   </p>
                   <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                    Your account is secured with a strong password
+                    {t('profile.password_active_desc', 'Your account is secured with a strong password')}
                   </p>
                 </div>
               </div>

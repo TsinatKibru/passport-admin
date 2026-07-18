@@ -5,6 +5,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { AlertCircle } from 'lucide-react';
+import { useTranslation } from '@/lib/contexts/LanguageContext';
 
 interface CreateUserModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ export function CreateUserModal({
   onSubmit,
   isLoading = false,
 }: CreateUserModalProps) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     email: '',
     name: '',
@@ -38,31 +40,31 @@ export function CreateUserModal({
     const newErrors: Record<string, string> = {};
 
     if (!formData.email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = t('security.modal_err_email_required', 'Email is required');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Invalid email address';
+      newErrors.email = t('security.modal_err_email_invalid', 'Invalid email address');
     }
 
     if (!formData.name || formData.name.length < 2) {
-      newErrors.name = 'Name must be at least 2 characters';
+      newErrors.name = t('security.modal_err_name_len', 'Name must be at least 2 characters');
     }
 
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = t('security.modal_err_password_required', 'Password is required');
     } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
+      newErrors.password = t('profile.err_len_min', 'Password must be at least 8 characters');
     } else if (!/[A-Z]/.test(formData.password)) {
-      newErrors.password = 'Password must contain at least one uppercase letter';
+      newErrors.password = t('profile.err_uppercase', 'Password must contain at least one uppercase letter');
     } else if (!/[a-z]/.test(formData.password)) {
-      newErrors.password = 'Password must contain at least one lowercase letter';
+      newErrors.password = t('profile.err_lowercase', 'Password must contain at least one lowercase letter');
     } else if (!/\d/.test(formData.password)) {
-      newErrors.password = 'Password must contain at least one number';
+      newErrors.password = t('profile.err_number', 'Password must contain at least one number');
     } else if (!/[@$!%*?&]/.test(formData.password)) {
-      newErrors.password = 'Password must contain at least one special character';
+      newErrors.password = t('profile.err_special', 'Password must contain at least one special character');
     }
 
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = t('profile.err_mismatch', 'Passwords do not match');
     }
 
     setErrors(newErrors);
@@ -117,24 +119,24 @@ export function CreateUserModal({
     if (/\d/.test(password)) strength += 1;
     if (!/[@$!%*?&]/.test(password)) strength += 1;
 
-    if (strength <= 2) return { strength, label: 'Weak', color: 'var(--danger)' };
-    if (strength <= 3) return { strength, label: 'Fair', color: 'var(--warning)' };
-    if (strength <= 4) return { strength, label: 'Good', color: 'var(--brand)' };
-    return { strength, label: 'Strong', color: 'var(--success)' };
+    if (strength <= 2) return { strength, label: t('profile.strength_weak', 'Weak'), color: 'var(--danger)' };
+    if (strength <= 3) return { strength, label: t('profile.strength_fair', 'Fair'), color: 'var(--warning)' };
+    if (strength <= 4) return { strength, label: t('profile.strength_good', 'Good'), color: 'var(--brand)' };
+    return { strength, label: t('profile.strength_strong', 'Strong'), color: 'var(--success)' };
   };
 
   const passwordStrength = getPasswordStrength();
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Create New User">
+    <Modal isOpen={isOpen} onClose={handleClose} title={t('security.modal_create_title', 'Create New User')}>
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: '20px' }}>
           <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px', color: 'var(--text-primary)' }}>
-            Name *
+            {t('security.modal_name_label', 'Name *')}
           </label>
           <Input
             type="text"
-            placeholder="Enter full name"
+            placeholder={t('security.modal_name_placeholder', 'Enter full name')}
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             disabled={isLoading}
@@ -148,11 +150,11 @@ export function CreateUserModal({
 
         <div style={{ marginBottom: '20px' }}>
           <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px', color: 'var(--text-primary)' }}>
-            Email *
+            {t('security.modal_email_label', 'Email *')}
           </label>
           <Input
             type="email"
-            placeholder="user@example.com"
+            placeholder={t('security.modal_email_placeholder', 'user@example.com')}
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             disabled={isLoading}
@@ -166,7 +168,7 @@ export function CreateUserModal({
 
         <div style={{ marginBottom: '20px' }}>
           <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px', color: 'var(--text-primary)' }}>
-            Role *
+            {t('security.modal_role_label', 'Role *')}
           </label>
           <select
             value={formData.role}
@@ -184,18 +186,18 @@ export function CreateUserModal({
               outline: 'none',
             }}
           >
-            <option value="STAFF">Staff - Limited Permissions</option>
-            <option value="ADMIN">Admin - Full Access</option>
+            <option value="STAFF">{t('security.modal_role_staff', 'Staff - Limited Permissions')}</option>
+            <option value="ADMIN">{t('security.modal_role_admin', 'Admin - Full Access')}</option>
           </select>
         </div>
 
         <div style={{ marginBottom: '20px' }}>
           <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px', color: 'var(--text-primary)' }}>
-            Password *
+            {t('security.modal_password_label', 'Password *')}
           </label>
           <Input
             type="password"
-            placeholder="Enter password"
+            placeholder={t('security.modal_password_placeholder', 'Enter password')}
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             disabled={isLoading}
@@ -203,7 +205,7 @@ export function CreateUserModal({
           {formData.password && (
             <div style={{ marginTop: '8px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Password strength:</span>
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{t('profile.password_strength', 'Password strength:')}</span>
                 <span style={{ fontSize: '12px', fontWeight: 600, color: passwordStrength.color }}>
                   {passwordStrength.label}
                 </span>
@@ -224,17 +226,17 @@ export function CreateUserModal({
             </div>
           )}
           <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px' }}>
-            Must be 8+ characters with uppercase, lowercase, number, and special character
+            {t('profile.password_rules', 'Must be 8+ characters with uppercase, lowercase, number, and special character')}
           </div>
         </div>
 
         <div style={{ marginBottom: '24px' }}>
           <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px', color: 'var(--text-primary)' }}>
-            Confirm Password *
+            {t('security.modal_confirm_password_label', 'Confirm Password *')}
           </label>
           <Input
             type="password"
-            placeholder="Confirm password"
+            placeholder={t('security.modal_confirm_password_placeholder', 'Confirm password')}
             value={formData.confirmPassword}
             onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
             disabled={isLoading}
@@ -253,14 +255,14 @@ export function CreateUserModal({
             onClick={handleClose}
             disabled={isLoading}
           >
-            Cancel
+            {t('profile.cancel', 'Cancel')}
           </Button>
           <Button
             type="submit"
             variant="primary"
             disabled={isLoading}
           >
-            {isLoading ? 'Creating...' : 'Create User'}
+            {isLoading ? t('security.modal_creating', 'Creating...') : t('security.modal_create_btn', 'Create User')}
           </Button>
         </div>
       </form>
