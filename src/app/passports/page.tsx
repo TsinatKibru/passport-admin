@@ -140,6 +140,7 @@ export default function PassportsPage() {
 
   // Fetch available boxes (pass neededSpaces for batch operations) with pagination
   const neededSpaces = modalType === 'batch-assign' ? selectedIds.size : 1;
+  const currentBoxId = modalType === 'assign' ? selectedPassport?.box?.id : undefined;
   const { data: boxesData, isLoading: boxesLoading } = useQuery<{
     data: MovableBox[];
     total: number;
@@ -148,7 +149,7 @@ export default function PassportsPage() {
     totalPages: number;
     hasMore: boolean;
   }>({
-    queryKey: ['boxes', 'available', neededSpaces, boxPage, boxSearch, boxRoomFilter],
+    queryKey: ['boxes', 'available', neededSpaces, boxPage, boxSearch, boxRoomFilter, currentBoxId],
     queryFn: async () => {
       const params = new URLSearchParams();
       params.set('neededSpaces', String(neededSpaces));
@@ -156,6 +157,7 @@ export default function PassportsPage() {
       params.set('limit', String(BOX_LIMIT));
       if (boxSearch) params.set('search', boxSearch);
       if (boxRoomFilter) params.set('roomId', boxRoomFilter);
+      if (currentBoxId) params.set('excludeBoxId', currentBoxId);
       const res = await apiClient.get(`/boxes/available?${params}`);
       return res.data;
     },
