@@ -174,12 +174,13 @@ export default function BoxesPage() {
 
   // Fetch slots with server-side pagination for move modal
   const { data: slotsData, isLoading: slotsLoading } = useQuery<PaginatedResponse<Slot>>({
-    queryKey: ['slots', 'paginated', slotPage, slotSearchInput],
+    queryKey: ['slots', 'paginated', slotPage, slotSearchInput, 'vacant'],
     queryFn: async () => {
       const params = new URLSearchParams();
       params.set('page', String(slotPage));
       params.set('limit', String(SLOT_PICKER_LIMIT));
       if (slotSearchInput) params.set('search', slotSearchInput);
+      params.set('vacantOnly', 'true');
       const res = await apiClient.get(`/location/slots?${params}`);
       return res.data;
     },
@@ -217,6 +218,8 @@ export default function BoxesPage() {
       setModalType(null);
       setSelectedBox(null);
       setSelectedSlotId('');
+      setSlotPage(1);
+      setSlotSearchInput('');
       toast.success('Box moved successfully');
     },
     onError: (error: any) => {
@@ -589,6 +592,8 @@ export default function BoxesPage() {
                         <button
                           onClick={() => {
                             setSelectedBox(box);
+                            setSlotPage(1);
+                            setSlotSearchInput('');
                             setModalType('move');
                           }}
                           style={{
