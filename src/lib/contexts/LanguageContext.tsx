@@ -19,6 +19,7 @@ const amharicTranslations: Translations = {
   'sidebar.profile': 'መገለጫ',
   'sidebar.security': 'ደህንነት',
   'sidebar.setup': 'ማዋቀር',
+  'sidebar.reports': 'ሪፖርቶች',
   'sidebar.logout': 'ውጣ',
 
   // Header
@@ -50,6 +51,10 @@ const amharicTranslations: Translations = {
   'dashboard.col_capacity': 'አቅም',
   'dashboard.col_status': 'ሁኔታ',
   'dashboard.loading_stats': 'የዳሽቦርድ ስታቲስቲክስ በመጫን ላይ...',
+  'dashboard.activity_trend': 'የፓስፖርት እንቅስቃሴ አዝማሚያ',
+  'dashboard.activity_trend_sub': 'ሳምንታዊ የፓስፖርት መመለስ እና መስጠት መጠን',
+  'dashboard.room_capacity': 'የክፍል ማከማቻ አቅም አጠቃቀም',
+  'dashboard.room_capacity_sub': 'የተያዙ ቦታዎች ከጠቅላላው አቅም አንጻር',
 
   // Passports page
   'passports.title': 'የፓስፖርት ምዝገባ',
@@ -452,6 +457,7 @@ const englishTranslations: Translations = {
   'sidebar.profile': 'Profile',
   'sidebar.security': 'Security',
   'sidebar.setup': 'Setup',
+  'sidebar.reports': 'Reports',
   'sidebar.logout': 'Logout',
 
   // Header
@@ -483,6 +489,10 @@ const englishTranslations: Translations = {
   'dashboard.col_capacity': 'Capacity',
   'dashboard.col_status': 'Status',
   'dashboard.loading_stats': 'Loading dashboard statistics...',
+  'dashboard.activity_trend': 'Passport Activity Trend',
+  'dashboard.activity_trend_sub': 'Weekly volume of passport returns and issues',
+  'dashboard.room_capacity': 'Room Capacity Utilization',
+  'dashboard.room_capacity_sub': 'Occupied slots vs total capacity',
 
   // Passports page
   'passports.title': 'Passport Registry',

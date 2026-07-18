@@ -18,6 +18,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   ChevronDown,
+  BarChart3,
 } from 'lucide-react';
 
 const navSections = [
@@ -27,6 +28,7 @@ const navSections = [
       { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
       { icon: FileText, label: 'Passports', href: '/passports' },
       { icon: Package, label: 'Boxes', href: '/boxes' },
+      { icon: BarChart3, label: 'Reports', href: '/reports' },
     ],
   },
   {
@@ -41,7 +43,6 @@ const navSections = [
     items: [
       { icon: User, label: 'Profile', href: '/profile' },
       { icon: Shield, label: 'Security', href: '/security' },
-      { icon: Settings, label: 'Setup', href: '/setup' },
     ],
   },
 ];

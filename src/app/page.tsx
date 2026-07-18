@@ -13,6 +13,18 @@ import { Badge } from '@/components/ui/Badge';
 import { Table, TableHead, TableBody, TableRow, TableHeader, TableCell } from '@/components/ui/Table';
 import { Package, AlertCircle, CheckCircle, TrendingUp } from 'lucide-react';
 import { useTranslation } from '@/lib/contexts/LanguageContext';
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 
 interface DashboardStats {
   // Passport metrics
@@ -69,20 +81,41 @@ interface PaginatedResponse<T> {
 export default function Dashboard() {
   const router = useRouter();
   const { t } = useTranslation();
-  const [searchInput, setSearchInput] = useState('');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const token = localStorage.getItem('accessToken');
     if (!token) {
       router.push('/login');
     }
   }, [router]);
 
-  // Fetch dashboard stats from backend (no fallback - endpoint exists now)
+  // Fetch dashboard stats from backend
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ['dashboard', 'stats'],
     queryFn: async () => {
       const res = await apiClient.get('/dashboard/stats');
+      return res.data;
+    },
+    refetchInterval: 5000,
+  });
+
+  // Fetch Activity Trend (7 days for dashboard)
+  const { data: trendData, isLoading: trendLoading } = useQuery<any[]>({
+    queryKey: ['dashboard', 'activity-trend', 7],
+    queryFn: async () => {
+      const res = await apiClient.get('/dashboard/activity-trend?days=7');
+      return res.data;
+    },
+    refetchInterval: 5000,
+  });
+
+  // Fetch Room Occupancy
+  const { data: occupancyData, isLoading: occupancyLoading } = useQuery<any[]>({
+    queryKey: ['dashboard', 'room-occupancy'],
+    queryFn: async () => {
+      const res = await apiClient.get('/dashboard/room-occupancy');
       return res.data;
     },
     refetchInterval: 5000,
@@ -157,6 +190,86 @@ export default function Dashboard() {
           waveColor="#DC2626"
         />
       </div>
+
+      {/* Grid of Interactive Charts */}
+      {mounted && (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+          gap: '20px',
+          marginBottom: '24px'
+        }}>
+          {/* Chart 1: Daily Activity Trend (7 Days) */}
+          <Card>
+            <PageHeader
+              title={t('dashboard.activity_trend', 'Passport Activity Trend')}
+              subtitle={t('dashboard.activity_trend_sub', 'Weekly volume of passport returns and issues')}
+            />
+            {trendLoading ? (
+              <div style={{ height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                Loading trend chart...
+              </div>
+            ) : (
+              <div style={{ height: '220px', width: '100%', padding: '10px 0' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={trendData || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorReturned" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--brand)" stopOpacity={0.2}/>
+                        <stop offset="95%" stopColor="var(--brand)" stopOpacity={0.0}/>
+                      </linearGradient>
+                      <linearGradient id="colorIssued" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--success)" stopOpacity={0.2}/>
+                        <stop offset="95%" stopColor="var(--success)" stopOpacity={0.0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                    <XAxis dataKey="date" stroke="var(--text-muted)" fontSize={11} tickLine={false} />
+                    <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
+                    <Tooltip
+                      contentStyle={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)' }}
+                      labelStyle={{ fontWeight: 600, color: 'var(--text-primary)' }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: 11, paddingTop: 5 }} />
+                    <Area name="Returned to Vault" type="monotone" dataKey="returned" stroke="var(--brand)" strokeWidth={2} fillOpacity={1} fill="url(#colorReturned)" />
+                    <Area name="Issued to Owner" type="monotone" dataKey="issued" stroke="var(--success)" strokeWidth={2} fillOpacity={1} fill="url(#colorIssued)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </Card>
+
+          {/* Chart 2: Room Occupancy Capacity */}
+          <Card>
+            <PageHeader
+              title={t('dashboard.room_capacity', 'Room Capacity Utilization')}
+              subtitle={t('dashboard.room_capacity_sub', 'Occupied slots vs total capacity')}
+            />
+            {occupancyLoading ? (
+              <div style={{ height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                Loading room utilization chart...
+              </div>
+            ) : (
+              <div style={{ height: '220px', width: '100%', padding: '10px 0' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={occupancyData || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                    <XAxis dataKey="roomName" stroke="var(--text-muted)" fontSize={11} tickLine={false} />
+                    <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
+                    <Tooltip
+                      contentStyle={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)' }}
+                      labelStyle={{ fontWeight: 600, color: 'var(--text-primary)' }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: 11, paddingTop: 5 }} />
+                    <Bar name="Occupied Slots" dataKey="occupied" fill="var(--brand)" radius={[4, 4, 0, 0]} maxBarSize={25} />
+                    <Bar name="Total Capacity" dataKey="capacity" fill="var(--border)" radius={[4, 4, 0, 0]} maxBarSize={25} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
 
       {/* Movable Box Overview Table */}
       <Card>
